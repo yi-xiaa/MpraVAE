@@ -19,7 +19,10 @@ install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','
 MpraVAE is implemented by Python3.
 
 Download MpraVAE:
-       git clone https://github.com/yi-xiaa/MpraVAE
+```Python
+git clone https://github.com/yi-xiaa/MpraVAE
+```
+
 - Python
 ```Python
 pip3 install -r requirements --user
