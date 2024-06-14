@@ -15,6 +15,10 @@ BiocManager::install(c("biomformat","edgeR","DESeq2"))
 install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','nonnest2'))
 ```
 
+```Python
+pip3 install -r requirements --user
+```
+
 
 ## Usage
 
