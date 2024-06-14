@@ -30,7 +30,7 @@ Thank `You` . Please `Call` Me `Coder`
 [lichen-lab](https://github.com/lichen-lab "https://github.com/lichen-lab")
 
 ## Reference
-If you use MpraVAE, please cite:
+If you use `MpraVAE`, please cite:
 
     Ye Wang, Li Chen, DeepPerVar: a multi-modal deep learning framework for functional interpretation of genetic variants in personal genome, Bioinformatics, Volume 38, Issue 24, 15 December 2022, Pages 5340–5351, [https://doi.org/10.1093/bioinformatics/btac696](https://doi.org/10.1093/bioinformatics/btac696).
 
