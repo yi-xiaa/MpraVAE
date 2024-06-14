@@ -32,5 +32,5 @@ Thank `You` . Please `Call` Me `Coder`
 ## Reference
 If you use MpraVAE, please cite:
 
-Aman Agarwal, Fengdi Zhao, Yuchao Jiang, Li Chen, TIVAN-indel: a computational framework for annotating and predicting non-coding regulatory small insertions and deletions, Bioinformatics, Volume 39, Issue 2, February 2023, btad060, https://doi.org/10.1093/bioinformatics/btad060
+        Ye Wang, Li Chen, DeepPerVar: a multi-modal deep learning framework for functional interpretation of genetic variants in personal genome, Bioinformatics, Volume 38, Issue 24, 15 December 2022, Pages 5340–5351, [https://doi.org/10.1093/bioinformatics/btac696](https://doi.org/10.1093/bioinformatics/btac696).
 
