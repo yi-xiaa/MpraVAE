@@ -15,6 +15,11 @@ MpraVAE, a deep generative model, addresses this limitation by augmenting the tr
 BiocManager::install(c("biomformat","edgeR","DESeq2"))
 install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','nonnest2'))
 ```
+
+MpraVAE is implemented by Python3.
+
+Download MpraVAE:
+    git clone https://github.com/yi-xiaa/MpraVAE
 - Python
 ```Python
 pip3 install -r requirements --user
