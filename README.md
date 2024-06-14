@@ -1,5 +1,5 @@
 # MpraVAE
-A deep generative model to augment genetic variants sample size, enhancing the prediction of regulatory variants in non-coding regions built on top of [Pytorch](https://pytorch.org/)
+A deep generative model to augment genetic variants sample size, enhancing the prediction of regulatory variants in non-coding regions built on top of [Pytorch](https://pytorch.org/).
 
 ## Introduction
 Predicting the functional impact of genetic variants in non-coding regions is challenging. Massively parallel reporter assays (MPRAs) can test thousands of variants for allele-specific regulatory activity, but typically only identify a few hundred labelled variants, limiting their use for genome-wide prediction. 
@@ -28,4 +28,8 @@ pip3 install -r requirements --user
 Thank `You` . Please `Call` Me `Coder`
 
 [lichen-lab](https://github.com/lichen-lab "https://github.com/lichen-lab")
+
+## Reference
+If you use MpraVAE, please cite:
+        Aman Agarwal, Fengdi Zhao, Yuchao Jiang, Li Chen, TIVAN-indel: a computational framework for annotating and predicting non-coding regulatory small insertions and deletions, Bioinformatics, Volume 39, Issue 2, February 2023, btad060, https://doi.org/10.1093/bioinformatics/btad060
 
