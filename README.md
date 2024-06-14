@@ -9,7 +9,16 @@ MpraVAE, a deep generative model, addresses this limitation by augmenting the tr
 
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/Figure1.png)
 
+## Requirements and Installation
+```R
+BiocManager::install(c("biomformat","edgeR","DESeq2"))
+install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','nonnest2'))
+```
 
+
+## Usage
+
+## Example
 
 Thank `You` . Please `Call` Me `Coder`
 
