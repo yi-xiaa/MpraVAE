@@ -20,7 +20,7 @@ install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','
 pip3 install -r requirements --user
 ```
 
-fdghdfh
+
 ## Usage
 
 ## Example
