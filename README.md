@@ -32,13 +32,11 @@ We provide several tutorials and user guide. If you find our tool useful for you
 <table>
   <tr>
     <td><a href="URL_TO_USER_GUIDE">User guide</a></td>
-    <td><a href="URL_TO_PBMCS_TUTORIAL">PBMCs tutorial</a></td>
-    <td><a href="URL_TO_H1_CELL_LINE_TUTORIAL">H1 cell line tutorial</a></td>
+    <td><a href="URL_TO_PBMCS_TUTORIAL">Data preprocessing</a></td>
   </tr>
   <tr>
-    <td><a href="URL_TO_GRN_BENCHMARK">GRN benchmark</a></td>
-    <td><a href="URL_TO_IN_SILICO_PERTURBATION">In silico perturbation</a></td>
-    <td><a href="URL_TO_OTHER_SPECIES">Other species</a></td>
+    <td><a href="URL_TO_GRN_BENCHMARK">Data Augmentaion</a></td>
+    <td><a href="URL_TO_GRN_BENCHMARK">Benchmark</a></td>
   </tr>
 </table>
 
