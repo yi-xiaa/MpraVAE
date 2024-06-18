@@ -13,7 +13,6 @@ We implement a R shinny webserver to predict the regulatory effects of genetic v
 
 ## Requirements and Installation
 
-
 - R
 ```R
 install.packages(c("dplyr", "data.table", "randomForest", "cvTools", "ROCR"))
