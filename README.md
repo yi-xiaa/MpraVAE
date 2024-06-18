@@ -43,10 +43,7 @@ We provide several tutorials and user guide. If you find our tool useful for you
   <tr>
     <td><a href="URL_TO_USER_GUIDE">User guide</a></td>
     <td><a href="URL_TO_PBMCS_TUTORIAL">Data Preprocess</a></td>
-  </tr>
-  <tr>
     <td><a href="URL_TO_GRN_BENCHMARK">Data Augmentaion</a></td>
-    <td><a href="URL_TO_GRN_BENCHMARK">Benchmark</a></td>
   </tr>
 </table>
 
