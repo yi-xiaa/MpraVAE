@@ -9,7 +9,7 @@ MpraVAE, a deep generative model, addresses this limitation by augmenting the tr
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/Figure1.png)
 
 ## MpraVAE Webserver
-We implement a R shinny webserver to predict genome-wide H3K9ac signals and DNA methylation ratio and the mutation effect on these two epigenetics signals. The webserver can be accessed from [link](https://mpravae.rc.ufl.edu/).
+We implement a R shinny webserver to predict the regulatory effects of genetic variants in GWAS loci, eQTLs and various genomic features. The webserver can be accessed from [link](https://mpravae.rc.ufl.edu/).
 
 ## Requirements and Installation
 - R
