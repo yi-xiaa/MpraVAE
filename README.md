@@ -12,13 +12,15 @@ MpraVAE, a deep generative model, addresses this limitation by augmenting the tr
 We implement a R shinny webserver to predict the regulatory effects of genetic variants in GWAS loci, eQTLs and various genomic features. The webserver can be accessed from [link](https://mpravae.rc.ufl.edu/).
 
 ## Requirements and Installation
+
+
 - R
 ```R
 install.packages(c("dplyr", "data.table", "randomForest", "cvTools", "ROCR"))
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-    
+
 BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "EnsDb.Hsapiens.v75", 
                        "EnsDb.Hsapiens.v86", "SNPlocs.Hsapiens.dbSNP144.GRCh38", 
                        "SNPlocs.Hsapiens.dbSNP144.GRCh37", "BSgenome.Hsapiens.UCSC.hg19", 
@@ -29,6 +31,10 @@ BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "EnsDb.Hsapiens
 ```
 
 MpraVAE is implemented by Python3.
+- Python >= 3.10.12
+- numpy >= 1.25.2
+- pytorch >= 2.0.0
+- biopython >= 1.81
 
 Download MpraVAE:
 ```Python
