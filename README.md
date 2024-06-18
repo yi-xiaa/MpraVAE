@@ -14,8 +14,17 @@ We implement a R shinny webserver to predict the regulatory effects of genetic v
 ## Requirements and Installation
 - R
 ```R
-BiocManager::install(c("biomformat","edgeR","DESeq2"))
-install.packages(c('ggplot2','gridExtra','lattice','reshape2','MASS','dirmult','nonnest2'))
+install.packages(c("dplyr", "data.table", "randomForest", "cvTools", "ROCR"))
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "EnsDb.Hsapiens.v75", 
+                       "EnsDb.Hsapiens.v86", "SNPlocs.Hsapiens.dbSNP144.GRCh38", 
+                       "SNPlocs.Hsapiens.dbSNP144.GRCh37", "BSgenome.Hsapiens.UCSC.hg19", 
+                       "BSgenome.Hsapiens.UCSC.hg38", "TxDb.Hsapiens.UCSC.hg19.knownGene", 
+                       "TxDb.Hsapiens.UCSC.hg38.knownGene", "org.Hs.eg.db", 
+                       "motifmatchr", "Matrix", "SummarizedExperiment", 
+                       "TFBSTools", "JASPAR2020"))
 ```
 
 MpraVAE is implemented by Python3.
