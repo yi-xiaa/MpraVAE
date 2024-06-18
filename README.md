@@ -18,6 +18,7 @@ install.packages(c("dplyr", "data.table", "randomForest", "cvTools", "ROCR"))
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+    
 BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "EnsDb.Hsapiens.v75", 
                        "EnsDb.Hsapiens.v86", "SNPlocs.Hsapiens.dbSNP144.GRCh38", 
                        "SNPlocs.Hsapiens.dbSNP144.GRCh37", "BSgenome.Hsapiens.UCSC.hg19", 
