@@ -62,8 +62,7 @@ Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /pat
 python /path/to/main.py autoimmune_disease
 ```
 
-
-- Python command line for classifier to give output
+- Python command line for classifier to predict the label of variants in exampleFASTA.txt
 ```command
 Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
 ```
