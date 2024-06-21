@@ -57,10 +57,9 @@ pip3 install -r requirements --user
 Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
 ```
 
-
-- Python command line for data augmentation
+- Python command line to get the MpraVAE classifier.
 ```command
-Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+python /path/to/main.py autoimmune_disease
 ```
 
 
