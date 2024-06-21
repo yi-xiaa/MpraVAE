@@ -57,7 +57,7 @@ pip3 install -r requirements --user
 Rscript /path/to/main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
 ```
 
-- Python command line to get the MpraVAE classifier.
+- Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
 python /path/to/main.py autoimmune_disease
 ```
