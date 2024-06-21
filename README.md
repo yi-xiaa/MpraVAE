@@ -59,13 +59,15 @@ Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /pat
 
 
 - Python command line for data augmentation
-
-    Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```command
+Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```
 
 
 - Python command line for classifier to give output
-
-    Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```command
+Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```
 
 ## Documentation
 We provide several tutorials and user guide. If you find our tool useful for your research, please consider citing the MpraVAE manuscript.
