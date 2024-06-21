@@ -15,17 +15,13 @@ We implement a R shinny webserver to predict the regulatory effects of genetic v
 
 - R
 ```R
-install.packages(c("dplyr", "data.table", "randomForest", "cvTools", "ROCR"))
+install.packages(c("dplyr", "data.table"))
 
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
-BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "EnsDb.Hsapiens.v75", 
-                       "EnsDb.Hsapiens.v86", "SNPlocs.Hsapiens.dbSNP144.GRCh38", 
-                       "SNPlocs.Hsapiens.dbSNP144.GRCh37", "BSgenome.Hsapiens.UCSC.hg19", 
-                       "BSgenome.Hsapiens.UCSC.hg38", "TxDb.Hsapiens.UCSC.hg19.knownGene", 
-                       "TxDb.Hsapiens.UCSC.hg38.knownGene", "org.Hs.eg.db", 
-                       "motifmatchr", "Matrix", "SummarizedExperiment", 
+BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "BSgenome.Hsapiens.UCSC.hg19", 
+                       "BSgenome.Hsapiens.UCSC.hg38", "Matrix", "SummarizedExperiment", 
                        "TFBSTools", "JASPAR2020"))
 ```
 
