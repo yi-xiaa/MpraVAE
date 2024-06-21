@@ -52,9 +52,9 @@ pip3 install -r requirements --user
 - The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as [Mpra autoimmune](https://github.com/yi-xiaa/MpraVAE/blob/main/data/Prioritization%20of%20autoimmune%20disease-associated%20genetic%20variants%20that%20perturb%20regulatory%20element%20activity%20in%20T%20cells(preprocessed).csv).
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
-- R command line to take the summary table as input, then output the input file for deep learning. This step will output several .fasta files.
+- R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
-Rscript /path/to/main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output
+Rscript /path/to/fasta_generation.R --data data/input.csv --output /path/to/output
 ```
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
