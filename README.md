@@ -49,7 +49,7 @@ pip3 install -r requirements --user
 ## Usage
 
 ## Example
-- The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as
+- The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as [example](https://github.com/yi-xiaa/MpraVAE/blob/main/data/Prioritization%20of%20autoimmune%20disease-associated%20genetic%20variants%20that%20perturb%20regulatory%20element%20activity%20in%20T%20cells(preprocessed).csv).
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
 - R command line to take the summary table as input, then output the input file for deep learning. This step will output several .fasta files.
