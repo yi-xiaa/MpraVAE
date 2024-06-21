@@ -158,6 +158,15 @@ def getProbability_CNN_py(modelname, seq_input_path, outfolder=""):
     df.to_csv(outpath, header=None, index=False)
 
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run the CNN prediction model.")
+    parser.add_argument("--modelname", type=str, required=True, help="Name of the model to use for prediction.")
+    parser.add_argument("--seq_input_path", type=str, required=True, help="Path to the input fasta file.")
+    parser.add_argument("--outfolder", type=str, required=True, help="Output folder for the results.")
+
+    args = parser.parse_args()
+
+    getProbability_CNN_py(args.modelname, args.seq_input_path, args.outfolder)
 
 
 
