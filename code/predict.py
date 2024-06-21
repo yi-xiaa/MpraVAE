@@ -1,87 +1,161 @@
-from pathlib import Path
-import json
-import seaborn as sns
+import numpy as np
+from numpy import array
+from random import sample,seed
+import time
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import argparse
-import sys
-import torch
+#from statannot import add_stat_annotation
+import pandas as pd
+#import numpy as np
+from Bio import SeqIO
+import h5py
+import seaborn as sns
+from scipy.stats import wilcoxon,pearsonr
+from re import search
+import math
+import os
 import warnings
 
-with open("/path/to/libMPRA.py") as f:
-    exec(f.read())
-with open("/path/to/modelMPRA.py") as f:
-    exec(f.read())
-with open("/path/to/trainMPRA.py") as f:
-    exec(f.read())
-with open("/path/to/libcVAE.py") as f:
-    exec(f.read())
-with open("/path/to/modelcVAE.py") as f:
-    exec(f.read())
-
-parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
-parser.add_argument("celltype", type=str, help="Cell type to process")
-args = parser.parse_args()
-celltype = args.celltype
-# celltypes = ["Jurkat"]
-# diseases = ["autoimmune_disease"]
-
-idata='data10'
-fractions = [0.2, 0.5, 1.0]
-fractions_json = ['0.2', '0.5', '1.0']
-
-NUM_ITERATIONS = 1
-
-data_folder = Path("/path/to/Data")
-input_dir = '/path/to/input_data_folder'
-output_dir = '/path/to/output_folder'
-fasta_output_dir = '/path/to/fasta_output_folder'
+import time
+import sys
 
 
-torch.cuda.is_available()
-torch.cuda.device_count()
+#from numpy import argmax
+from sklearn.metrics import roc_curve,auc,f1_score,recall_score,precision_score,accuracy_score
+from sklearn import metrics
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight, shuffle
+from sklearn.metrics import classification_report
 
-print(torch.__version__)
-print(torch.version.cuda)
 
+import torch
+import torch.nn.functional as F
+from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset 
+from torch.utils.data import random_split
+from torch.utils.data import DataLoader
+from torchvision.transforms import ToTensor
+from torch.optim import Adam
+from torch import nn
 warnings.filterwarnings("ignore")
 
-BATCH_SIZE = 64
-INIT_LR = 1e-4
-early_stop_thresh = 10
-EPOCHS=50
-random_state=1234
-seed=1234
+class CNN_single1(nn.Module):
+    def __init__(self, num_kernels=(128, 256), dropout_rate=0.1):
+        super(CNN_single1, self).__init__()
+        # Convolutional layers
+        self.Conv1 = nn.Conv1d(in_channels=4, out_channels=num_kernels[0], kernel_size=4)
+        self.Conv2 = nn.Conv1d(in_channels=num_kernels[0], out_channels=num_kernels[1], kernel_size=4)
+        self.Maxpool = nn.MaxPool1d(kernel_size=4, stride=4)
+        # Dropout
+        self.Drop = nn.Dropout(p=dropout_rate)
+        # Linear layers - adjust the input size based on num_kernels
+        self.Linear1 = nn.Linear(61 * num_kernels[1], 128)  # Update size accordingly
+        self.Linear2 = nn.Linear(128, 32)
+        self.Linear3 = nn.Linear(32, 2)
+        self.logSoftmax = nn.LogSoftmax(dim=1)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# print(device)
+    def forward(self, input):
+        x = self.Conv1(input)
+        x = F.relu(x)
+        x = self.Maxpool(x)
+        x = self.Drop(x)
+        
+        x = self.Conv2(x)
+        x = F.relu(x)
+        x = self.Maxpool(x)
+        x = self.Drop(x)
+        
+        x = x.view(-1,self.Linear1.in_features)
+                
+        x = self.Linear1(x)
+        x = F.relu(x)
+        x = self.Drop(x)
+        
+        x = self.Linear2(x)
+        x = F.relu(x)
+        x = self.Drop(x)
+        
+        x = self.Linear3(x)
+        
+        x = self.logSoftmax(x)
+        return x
 
-latent_dim = 64
-model = cVAE(latent_dim).to(device)
+def onehot(fafile):
+    x=[]
+    for seq_record in SeqIO.parse(fafile, "fasta"):
+        #print(seq_record.id)
+        #print(seq_record.seq)
+        #get sequence into an array
+        seq_array = array(list(seq_record.seq))
+        #integer encode the sequence
+        label_encoder = LabelEncoder()
+        integer_encoded_seq = label_encoder.fit_transform(seq_array)
+        #one hot the sequence
+        onehot_encoder = OneHotEncoder(sparse=False)
+        #reshape because that's what OneHotEncoder likes
+        integer_encoded_seq = integer_encoded_seq.reshape(len(integer_encoded_seq), 1)
+        onehot_encoded_seq = onehot_encoder.fit_transform(integer_encoded_seq)
+        x.append(onehot_encoded_seq)        
+    x = array(x)
+    return x
 
-lr = 2e-4
-optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+def testModel(model,model_savename,testData_seq,BATCH_SIZE=64,verbose=0,predictonly = 0):
 
-print(celltype)
-x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq = readData(idata, celltype)
+    device = torch.device("cpu")
 
-combinations = ['VAE']
+    testDataLoader = DataLoader(testData_seq, batch_size=BATCH_SIZE)
 
-results = {celltype: {fraction: {combine: {'Accuracy': [],'AUC': [],'AUPRC': [],'f1': [],'precision': [],'recall': [],'R': [],'predsProb': [],'preds': [],'y_test': []} for combine in combinations} for fraction in fractions}}
-
-print('####################################')
-print('########### Celltype:', celltype, '##########')
-print('####################################')
-# Retrieve dropout_rate and num_kernels for the current celltype
-dropout_rate = 0.1
-num_kernels = (128, 256)
-
-x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq = readData(idata, celltype)
+    #print("[INFO]  resume best model...")
     
-results = process_fractions_allmethods(celltype, fractions, combinations, x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq,
-                                           dropout_rate, num_kernels, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, NUM_ITERATIONS, results, input_dir, output_dir, 
-                                           data_folder, device, random_state)
+    resume(model, model_savename)
+
+    # we can now evaluate the network on the test set
+    #print("[INFO] evaluating network...")
+    # turn off autograd for testing evaluation
+    with torch.no_grad():
+        # set the model in evaluation mode
+        model.eval()
+
+        # initialize a list to store our predictions
+        preds = []
+        predsProb = []
+        ys = []
+
+        # loop over the test set
+        for x in testDataLoader:
+            # send the input to the device
+            x = x.to(device,dtype=torch.float)
+            # make the predictions and add them to the list
+            pred = model(x)
+            preds.extend(pred.argmax(axis=1).cpu().numpy())
+            predsProb.extend(pred[:,1].cpu().numpy())
+
+
+    preds=np.array(preds)
+    predsProb=np.array(predsProb)
+    ys=np.array(ys)
+    if predictonly == 0:
+        acc_test, auc_test, f1_test, precision_test, recall_test,R_test=eval_model(preds,predsProb,ys,verbose=verbose)
+        return [acc_test, auc_test, f1_test, precision_test, recall_test,R_test,predsProb]
+    else:
+        return predsProb
+
+def resume(model, filename):
+    model.load_state_dict(torch.load(filename,map_location=torch.device('cpu')))
+
     
+def getProbability_CNN_py(modelname, seq_input_path, outfolder=""):
+    seq_input = onehot(seq_input_path)
+    seq_input_inv = seq_input.transpose((0, 2, 1))
+    
+    model = CNN_single1()
+    
+    predsProb = testModel(model, modelname, seq_input_inv, BATCH_SIZE=64, verbose=0, predictonly=1)
+    
+    df = pd.DataFrame(np.exp(predsProb))
+    
+    outpath = "./" + outfolder + "probs_out.csv"
+    df.to_csv(outpath, header=None, index=False)
 
 
 
