@@ -53,7 +53,9 @@ pip3 install -r requirements --user
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
 - R command line to take the summary table as input, then output the input file for deep learning. This step will output several .fasta files.
-        Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```command
+Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+```
 
     Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
 
