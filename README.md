@@ -51,11 +51,20 @@ pip3 install -r requirements --user
 ## Example
 - We have an excel table of MPRA variants summary (chr,pos,label)
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
-- Run command line for eaxample, R command line to take the summary table as input to output the input file for deep learning
+
+- R command line to take the summary table as input, then output the input file for deep learning. This step will output several .fasta files.
+
+    Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+
 
 - Python command line for data augmentation
 
+    Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
+
+
 - Python command line for classifier to give output
+
+    Rscript main.R --code /path/to/code/folder --data data/input.csv --gene_ref /path/to/gene.ref.rda --motif /path/to/human.motif.rda --output /path/to/output --idata 10
 
 ## Documentation
 We provide several tutorials and user guide. If you find our tool useful for your research, please consider citing the MpraVAE manuscript.
