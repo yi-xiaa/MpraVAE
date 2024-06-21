@@ -10,8 +10,7 @@ option_list = list(
   make_option(c("-d", "--data"), type="character", default=NULL, help="Path to the input data", metavar="character"),
   make_option(c("-g", "--gene_ref"), type="character", default=NULL, help="Path to the gene reference file", metavar="character"),
   make_option(c("-m", "--motif"), type="character", default=NULL, help="Path to the human motif file", metavar="character"),
-  make_option(c("-o", "--output"), type="character", default="./", help="Output directory", metavar="character"),
-  make_option(c("-i", "--idata"), type="integer", default=10, help="idata value", metavar="integer")
+  make_option(c("-o", "--output"), type="character", default="./", help="Output directory", metavar="character")
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -60,11 +59,11 @@ for (idisease in diseases) {
   message(sum(id.pos), ' ', sum(id.neg))
   
   evalPerf(dat1, id.pos, id.neg, motifs, feature.type = '3mer',
-           name.export = paste(paste0('data', opt$idata), idisease, sep = '.'), outpath = opt$output, is.output = TRUE)
+           name.export = paste(idisease, sep = '.'), outpath = opt$output, is.output = TRUE)
   
   evalPerf(dat1, id.pos, id.neg, motifs, feature.type = 'motif',
-           name.export = paste(paste0('data', opt$idata), idisease, sep = '.'), outpath = opt$output, is.output = FALSE)
+           name.export = paste(idisease, sep = '.'), outpath = opt$output, is.output = FALSE)
   
   createRevAndCropSeq(dat1, id.pos, id.neg, ext.crop = 1000, ntimes = 2,
-                      paste(paste0('data', opt$idata), idisease, sep = '.'), opt$output)
+                      paste(idisease, sep = '.'), opt$output)
 }
