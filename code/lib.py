@@ -17,13 +17,319 @@ from tqdm import tqdm
 from torch.nn import functional as F
 import torch.nn.functional as F
 import warnings
-
 import os
 import math
 
+# In[2]:
+
+
+import numpy as np
+from numpy import array
+from random import sample,seed
+import time
+import matplotlib.pyplot as plt
+import pandas as pd
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+import h5py
+import seaborn as sns
+from scipy.stats import wilcoxon,pearsonr
+from re import search
+import sys
+from collections import Counter
+import itertools
+import statistics
+
+from sklearn.metrics import roc_curve,roc_auc_score,auc,f1_score,recall_score,precision_score,accuracy_score,precision_recall_curve
+from sklearn import metrics
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder,LabelBinarizer
+from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight, shuffle
+from sklearn.metrics import classification_report
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import StratifiedKFold
+
+import torch
+import torch.nn.functional as F
+from torch.utils.data import Dataset
+from torch.utils.data import TensorDataset 
+from torch.utils.data import random_split
+from torch.utils.data import DataLoader
+from torchvision.transforms import ToTensor
+from torch.optim import Adam
+from torch import nn
+
+import matplotlib
+
+
+
+# In[3]:
+def onehot(fafile):
+    x = []
+    for seq_record in SeqIO.parse(fafile, "fasta"):
+        seq_array = np.array(list(seq_record.seq))
+
+        if len(seq_array) != 1001:
+            print(f"Warning: Sequence length {len(seq_array)} is not 1001")
+            continue
+
+        label_encoder = LabelEncoder()
+        integer_encoded_seq = label_encoder.fit_transform(seq_array)
+
+        onehot_encoder = OneHotEncoder(sparse=False)
+        integer_encoded_seq = integer_encoded_seq.reshape(len(integer_encoded_seq), 1)
+        onehot_encoded_seq = onehot_encoder.fit_transform(integer_encoded_seq)
+
+        if onehot_encoded_seq.shape != (1001, 4):
+            print(f"Unexpected shape: {onehot_encoded_seq.shape}")
+            continue
+        x.append(onehot_encoded_seq)
+    x = array(x)
+    return x
+
+
+# In[ ]:
+
+def onehot_to_seq(onehot_encoded):
+    """
+    Convert one-hot encoded DNA sequences back to nucleotide sequences.
+    """
+    base_dict = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
+    sequences = []
+    for seq in onehot_encoded:
+        nucleotide_seq = ""
+        for base in seq:
+            nucleotide_seq += base_dict[np.argmax(base)]
+        sequences.append(nucleotide_seq)
+    return sequences
+
+def save_to_fastafile(sequences, filename, output_dir):
+    """
+    Save a list of DNA sequences to a FASTA file.
+    """
+    seq_records = [SeqRecord(Seq(seq), id=f"seq_{i}", description="") for i, seq in enumerate(sequences)]
+    filepath = os.path.join(output_dir, filename)
+    with open(filepath, "w") as output_handle:
+        SeqIO.write(seq_records, output_handle, "fasta")
+
+
+# In[ ]:
+def read_fasta_and_label(file_path, label):
+    sequences = []
+    for record in SeqIO.parse(file_path, "fasta"):
+        sequences.append(str(record.seq))
+    return pd.DataFrame({'sequence': sequences, 'label': label})
+
+def get_all_kmers(k):
+    """Generate all possible k-mers given the alphabet."""
+    return [''.join(p) for p in itertools.product('ATCG', repeat=k)]
+
+def extract_features(sequence, k=3):
+    """Extract k-mer frequency features from a given sequence."""
+    kmers = get_all_kmers(k)
+    kmer_counts = Counter([sequence[i:i+k] for i in range(len(sequence) - k + 1)])
+    total_kmers = sum(kmer_counts.values())
+    return np.array([kmer_counts.get(kmer, 0) / total_kmers for kmer in kmers])
+
+
+
+# In[4]:
+def readData(idata,celltype):
+    # true data
+    seq_pos_file='seq.'+idata+'.'+celltype+'.pos.fasta'
+    x_pos_seq=onehot(data_folder/seq_pos_file)
+    seq_neg_file='seq.'+idata+'.'+celltype+'.neg.fasta'
+    x_neg_seq=onehot(data_folder/seq_neg_file)
+
+    print('true, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
+
+    return x_pos_seq,x_neg_seq
+
+
+# In[ ]:
+
+def downsample_data(x, y, fraction):
+        indices = np.random.choice(len(x), int(len(x) * fraction), replace=False)
+        return x[indices], y[indices], indices
+
+
+# In[ ]:
+def split_testdata(x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, test_size=0.2, seed=1234, verbose=0):
+    np.random.seed(int(seed))
+    
+    # For True data
+    y_pos = np.ones(x_pos_seq.shape[0])
+    y_neg = np.zeros(x_neg_seq.shape[0])
+    original_len_pos = x_pos_seq.shape[0]
+    original_len_neg = x_neg_seq.shape[0]
+    x_pos_seq_test, y_pos_test, pos_indices = downsample_data(x_pos_seq, y_pos, fraction=test_size)
+    x_neg_seq_test, y_neg_test, neg_indices = downsample_data(x_neg_seq, y_neg, fraction=test_size)
+    
+    pos_trainval_indices = np.setdiff1d(np.arange(x_pos_seq.shape[0]), pos_indices)
+    neg_trainval_indices = np.setdiff1d(np.arange(x_neg_seq.shape[0]), neg_indices)
+
+    x_pos_seq_trainval = x_pos_seq[pos_trainval_indices]
+    x_neg_seq_trainval = x_neg_seq[neg_trainval_indices]
+    
+    y_test = np.concatenate((y_pos_test, y_neg_test), axis=0)
+    x_test_noswap = np.concatenate((x_pos_seq_test, x_neg_seq_test), axis=0)
+    x_test = np.swapaxes(x_test_noswap,2,1)
+    testData_seqs = TensorDataset(torch.from_numpy(x_test), torch.from_numpy(y_test).long())
+    
+    testData_indices = np.concatenate((pos_indices, original_len_pos + neg_indices), axis=0)
+
+    return x_pos_seq_trainval, x_neg_seq_trainval, testData_seqs, testData_indices, x_test_noswap, y_test
+
+
+# In[5]:
+def shuffleXY(x_seq,y):
+    indices = np.arange(len(y))
+    indices = np.random.permutation(indices)
+    y=y[indices]
+    x_seq=x_seq[indices]
+    return x_seq,y
+
+# In[6]:
+
+def genData(x_pos_seq,x_neg_seq,seed=1234):
+    
+    y_pos=np.ones(x_pos_seq.shape[0])
+    y_neg=np.zeros(x_neg_seq.shape[0])
+    y=np.concatenate((y_pos,y_neg),axis=0)
+    x_seq=np.concatenate((x_pos_seq,x_neg_seq),axis=0)
+    x_seq=np.swapaxes(x_seq,2,1)  
+
+    np.random.seed(int(seed))
+    x_seq,y=shuffleXY(x_seq,y)
+    
+    return y, x_seq
+
+
+# In[ ]:
+
+def genData_downsample(x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, seed=1234, fraction=1.0, verbose=0):
+    np.random.seed(int(seed))
+    
+    # True data
+    y_pos = np.ones(x_pos_seq.shape[0])
+    y_neg = np.zeros(x_neg_seq.shape[0])
+    original_len_pos = x_pos_seq.shape[0]
+    original_len_neg = x_neg_seq.shape[0]
+    x_pos_seq_downsample, y_pos_downsample, pos_indices = downsample_data(x_pos_seq, y_pos, fraction)
+    x_neg_seq_downsample, y_neg_downsample, neg_indices = downsample_data(x_neg_seq, y_neg, fraction)
+
+    y = np.concatenate((y_pos_downsample, y_neg_downsample), axis=0)
+    x_seq = np.concatenate((x_pos_seq_downsample, x_neg_seq_downsample), axis=0)
+    x_seq = np.swapaxes(x_seq,2,1)
+    
+    return y, x_seq, x_pos_seq_downsample, y_pos_downsample, x_neg_seq_downsample, y_neg_downsample
+
+# In[ ]:
+def genTrainData(y, x_seq, random_state, combine='true', verbose=0, train_fraction=0.75):
+    
+    # for true
+    trainData_seq, valData_seq, ytrain, yval = train_test_split(x_seq, y, stratify=y, test_size= 1-train_fraction, random_state=random_state)
+    
+    if combine in ["true"]:
+        trainData_seqs=trainData_seq
+        valData_seqs=valData_seq
+        ytrains=ytrain
+        yvals=yval
+        
+    trainData = TensorDataset(torch.from_numpy(trainData_seqs), torch.from_numpy(ytrains).long())
+    valData = TensorDataset(torch.from_numpy(valData_seqs), torch.from_numpy(yvals).long())
+
+    return trainData, valData
+
+# In[ ]:
+
+def genTrainData_vae(y, x_seq, y_vae, x_seq_vae, random_state, verbose=0):
+    
+    # for true
+    trainData_seq, valData_seq, ytrain, yval = train_test_split(x_seq, y, stratify=y, test_size=0.25, random_state=random_state)
+
+    # for vae
+    trainData_seq_vae, valData_seq_vae, ytrain_vae, yval_vae = train_test_split(x_seq_vae, y_vae, stratify=y_vae, test_size=0.25, random_state=random_state)
+    
+    trainData_seqs=np.concatenate([trainData_seq,trainData_seq_vae],axis=0)
+    ytrains=np.concatenate([ytrain,ytrain_vae])
+    valData_seqs=np.concatenate([valData_seq,valData_seq_vae],axis=0)
+    yvals=np.concatenate([yval,yval_vae])      
+    
+    trainData_seqs,ytrains=shuffleXY(trainData_seqs,ytrains)
+    valData_seqs,yvals=shuffleXY(valData_seqs,yvals)
+
+    trainData_seqs = TensorDataset(torch.from_numpy(trainData_seqs), torch.from_numpy(ytrains).long())
+    valData_seqs = TensorDataset(torch.from_numpy(valData_seqs), torch.from_numpy(yvals).long())
+    
+    return trainData_seqs, valData_seqs
+
+# In[ ]:
+
+
+def calculate_average_sample_sizes_interlaced(sample_sizes, num_iterations, fractions):
+    fraction_averages = {}
+
+    for i, fraction in enumerate(fractions):
+        fraction_samples = sample_sizes[i::len(fractions)]
+        average_size = sum(fraction_samples) / num_iterations
+        fraction_averages[fraction] = average_size
+
+    return fraction_averages
+
+# In[ ]:
+def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, input_dir, output_dir, 
+                                             data_folder, device, random_state):
+
+    x_pos_seq_trainval, x_neg_seq_trainval, testData, testData_indices, x_test_noswap, y_test=split_testdata(
+            x_pos_seq, x_neg_seq, test_size=0, seed=current_seed, verbose=1)
+
+    y, x_seq, x_pos_seq_downsample, y_pos_downsample, x_neg_seq_downsample, y_neg_downsample = genData_downsample(
+                x_pos_seq_trainval, x_neg_seq_trainval, seed=current_seed, verbose=0)
+
+    y_pos_downsample_vae = np.ones(x_pos_seq_downsample.shape[0])
+    y_neg_downsample_vae = np.zeros(x_neg_seq_downsample.shape[0])
+    y_downsampletrue = np.concatenate((y_pos_downsample_vae, y_neg_downsample_vae), axis=0)
+    x_seq_downsampletrue = np.concatenate((np.swapaxes(x_pos_seq_downsample, 2, 1), np.swapaxes(x_neg_seq_downsample, 2, 1)), axis=0)
+
+    vae_x_pos_downsample = onehot_to_seq(x_pos_seq_downsample)
+    vae_x_neg_downsample = onehot_to_seq(x_neg_seq_downsample)
+
+    save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.{idata}.{celltype}.pos.fasta", output_dir=input_dir)
+    save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.{idata}.{celltype}.neg.fasta", output_dir=input_dir)
+                    
+    avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=600, batch_size=1024, latent_dim=64, lr=2e-4)
+                        
+    latent_dim = 64
+    model = cVAE(latent_dim).to(device)
+    lr = 2e-4
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    pos_trimer_freq, neg_trimer_freq = process_sequences_for_celltype(idata, celltype, input_dir, output_dir)
+    generate_and_save_sequences_for_celltype(idata, celltype, input_dir= input_dir, output_dir= output_dir, pos_trimer_freq=pos_trimer_freq, neg_trimer_freq=neg_trimer_freq, verbose=(iteration == 0))
+                
+    seq_pos_file_vae='seq.vae.'+idata+'.'+celltype+'.pos.fasta'
+    x_pos_seq_vae=onehot(data_folder/seq_pos_file_vae)
+    seq_neg_file_vae='seq.vae.'+idata+'.'+celltype+'.neg.fasta'
+    x_neg_seq_vae=onehot(data_folder/seq_neg_file_vae)
+                
+    y_pos_vae=np.ones(x_pos_seq_vae.shape[0])
+    y_neg_vae=np.zeros(x_neg_seq_vae.shape[0])
+    y_vae=np.concatenate((y_pos_vae,y_neg_vae),axis=0)
+    x_seq_vae=np.concatenate((x_pos_seq_vae,x_neg_seq_vae),axis=0)
+    x_seq_vae=np.swapaxes(x_seq_vae,2,1)
+    x_seq_vae,y_vae=shuffleXY(x_seq_vae,y_vae)
+
+    trainData_vae, valData_vae = genTrainData_vae(y_downsampletrue, x_seq_downsampletrue, y_vae, x_seq_vae, current_seed)
+                
+
+    model_savename = 'VAE' + celltype + '.pth'
+    model_vae = trainModel(trainData_vae, valData_vae, model_savename, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, verbose=0, num_kernels=num_kernels, dropout_rate=dropout_rate)
+
 
 # In[1]:
-
 
 def read_fasta(file_name):
     sequences = []
@@ -76,7 +382,6 @@ def get_trimer_frequencies(sequences):
 
 # In[ ]:
 
-
 def vae_loss(recon_x, x, mu, log_var):
     # BCE loss
     recon_loss = F.binary_cross_entropy(recon_x, x, reduction='sum')
@@ -87,9 +392,8 @@ def vae_loss(recon_x, x, mu, log_var):
 
 # In[ ]:
 
-
 def train_epoch(model, train_loader, optimizer, device):
-    model.train()  # Set the model to training mode
+    model.train()
     train_loss = 0
 
     for batch_idx, (data, conditions) in enumerate(train_loader):
@@ -97,103 +401,28 @@ def train_epoch(model, train_loader, optimizer, device):
 
         optimizer.zero_grad()
 
-        # Forward pass
         recon_batch, mu, log_var = model(data, conditions)
         
-        # Calculate loss
         loss = vae_loss(recon_batch, data, mu, log_var)
         
-        # Backward pass
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
 
     return train_loss / len(train_loader.dataset)
 
-
-# In[2]:
-
-
-import matplotlib.pyplot as plt
-
-def plot_trimer_frequencies(original_freq, generated_freq, title="", save_filename=None):
-    trimers = sorted(original_freq.keys())  # Get a sorted list of trimers
-    
-    original_values = [original_freq[trimer] for trimer in trimers]
-    generated_values = [generated_freq.get(trimer, 0) for trimer in trimers]  # Use 0 as a default value if trimer not in generated_freq
-    
-    bar_width = 0.35
-    r1 = range(len(trimers))
-    r2 = [x + bar_width for x in r1]
-
-    plt.figure(figsize=(15,7))
-
-    plt.bar(r1, original_values, width=bar_width, color='blue', label='Original')
-    plt.bar(r2, generated_values, width=bar_width, color='red', label='Generated')
-
-    plt.xlabel('Trimer', fontweight='bold')
-    
-    nth_label = 2  # Show every 2nd label
-    plt.xticks([r + bar_width for r in range(len(trimers)) if r % nth_label == 0], 
-              [trimers[i] for i in range(len(trimers)) if i % nth_label == 0], 
-              rotation=45, fontsize=10)
-    
-    plt.ylabel('Frequency', fontweight='bold')
-    plt.title(title)
-    plt.legend()
-    
-    if save_filename:  # Save the plot if a filename is provided
-        plt.savefig(save_filename)
-    else:
-        plt.show()
-
-
-# In[ ]:
-
-
-
-
-
-# # Added functions
-
 # In[ ]:
 
 
 def vae_loss(recon_x, x, mu, log_var, kl_weight=1.0):
-    # Categorical cross-entropy loss
-    # Note: recon_x should contain raw scores (logits) for each class
-    #       x should contain the class indices
-    
-#    recon_max1 = torch.argmax(recon_x,dim=1)
-#    seq_batch1 = recon_max1.cpu().numpy()
-#    seq_batch1
-#    recon_max2 = torch.argmax(x,dim=1)
-#    seq_batch2 = recon_max2.cpu().numpy()
-#    recon_loss = sum(np.sum(seq_batch2!=seq_batch1,axis=1))*2
-    
     recon_loss = F.cross_entropy(recon_x, x, reduction='sum')
-#    recon_loss = F.binary_cross_entropy(recon_x, x, reduction='sum')
-    
+
     # KL Divergence
     kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
     
     return recon_loss, kl_weight * kl_loss
 
 
-def trimer_frequency_old(seq_batch):
-    trimer_count = defaultdict(int)
-    total_trimers = 0
-
-    for seq in seq_batch:
-        for i in range(len(seq) - 2):
-            trimer = seq[i:i+3]
-            trimer_count[trimer] += 1
-            total_trimers += 1
-
-    for key in trimer_count:
-        trimer_count[key] /= total_trimers
-
-    return trimer_count
 
 def recon_to_sequence(recon):
     recon_max = torch.argmax(recon,dim=1)
@@ -225,9 +454,8 @@ def trimer_frequency(seq_batch):
  
 
 def loss_with_trimer_difference(recon_batch, data, mu, log_var, lambda1, lambda2):
-    N = mu.shape[0] # get the minibatch size
-#    print(f'mu.shape[0]: {mu.shape[0]}')
-    
+    N = mu.shape[0]
+
     recon_loss, kl_loss = vae_loss(recon_batch, data, mu, log_var)
     recon_loss = 4000*recon_loss / (4 * 1001)
 
@@ -239,10 +467,7 @@ def loss_with_trimer_difference(recon_batch, data, mu, log_var, lambda1, lambda2
         trimer_diff_loss = sum(abs(trimer_freq_gen[trimer] - trimer_freq_orig.get(trimer, 0)) for trimer in trimer_freq_gen) / 64
     
     combined_loss = recon_loss + lambda1 * trimer_diff_loss + lambda2 * kl_loss
-#    print(f'trimer_diff_loss from loss_with_trimer_difference(): {trimer_diff_loss}')
-    
-#    for trimer in trimer_freq_gen:
-#        print(f'trimer in trimer_freq_gen: {trimer}, trimer_freq_gen[trimer]: {trimer_freq_gen[trimer]}, trimer_freq_orig.get(trimer, 0):{trimer_freq_orig.get(trimer, 0)}' ) 
+
     combined_loss /= N
     recon_loss /= N
     trimer_diff_loss /= N
@@ -271,13 +496,6 @@ def train_epoch(epoch, model, train_loader, optimizer, device, lambda1=1e7, lamb
         total_recon_loss += recon_loss.item()
         total_kl_loss += kl_loss.item()
         total_trimer_diff_loss += trimer_diff_loss
-
-#    print(f'len(train_loader.dataset):{len(train_loader.dataset)}')
-#    avg_combined_loss = total_combined_loss / len(train_loader.dataset)
-#    avg_recon_loss = total_recon_loss / len(train_loader.dataset)
-#    avg_kl_loss = total_kl_loss / len(train_loader.dataset)
-#    avg_trimer_diff_loss = total_trimer_diff_loss / len(train_loader.dataset)
-#    return avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss
     
     return combined_loss.item(), recon_loss.item(), kl_loss.item(), trimer_diff_loss
 
@@ -291,10 +509,6 @@ def process_sequences(idata, celltype, sequence_type, input_dir, output_dir):
     np.save(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
 
     trimer_freq = get_trimer_frequencies(sequences)
-#    print(f"--- {sequence_type.upper()} SEQUENCES ---")
-#    for trimer, freq in trimer_freq.items():
-#        print(f'{trimer}: {freq}')
-#    print("\n")
 
     with open(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
         pickle.dump(trimer_freq, file)
@@ -328,18 +542,11 @@ def train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7
     
     tensor_data = torch.tensor(all_data, dtype=torch.float32)
     tensor_labels = torch.tensor(all_labels, dtype=torch.float32)
-#    print(f'tensor_data: {tensor_data}')
-#    print(f'tensor_labels: {tensor_labels}')
     data_loader = DataLoader(TensorDataset(tensor_data, tensor_labels), batch_size=batch_size, shuffle=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = cVAE(latent_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    
-#    min_avg_combined_loss = float('inf')
-#    best_recon_loss = 0
-#    best_kl_loss = 0
-#    best_trimer_diff_loss = 0
     
     avg_combined_loss_history = []
     avg_recon_loss_history = []
@@ -362,16 +569,6 @@ def train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7
         avg_recon_loss_history.append(avg_recon_loss)
         avg_kl_loss_history.append(avg_kl_loss)
         avg_trimer_diff_loss_history.append(avg_trimer_diff_loss)
-        
-#        if avg_kl_loss < highest_kl_loss:
-#            highest_kl_loss = avg_kl_loss
-#            epochs_since_klincrease = 0
-#        else:
-#            epochs_since_klincrease += 1
-#        
-#        if epochs_since_klincrease >= 100:
-#            print(f"Stopping early at epoch {epoch} due to no increase in KL loss.")
-#            break
 
     torch.save(model.state_dict(), f'test_cvae.{celltype}.pth')
     
@@ -403,8 +600,6 @@ def train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7
     plt.show()
     
     return avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss
-    
-#    return min_avg_combined_loss, best_recon_loss, best_kl_loss, best_trimer_diff_loss
 
 
 # In[2]:
@@ -423,7 +618,6 @@ def save_to_fasta(sequence_list, filename, output_dir, header_prefix="seq"):
 
 def process_sequences_for_celltype(idata, celltype, input_dir, output_dir):
     def read_and_process(sequence_type):
-        # Construct full path to the input file
         file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{idata}.{celltype}.{sequence_type}.fasta')
         
         sequences = read_fasta(file_path)
@@ -432,10 +626,6 @@ def process_sequences_for_celltype(idata, celltype, input_dir, output_dir):
         np.save(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
 
         trimer_freq = get_trimer_frequencies(sequences)
-#        print(f"--- {sequence_type.upper()} Original SEQUENCES ---")
-#        for trimer, freq in trimer_freq.items():
-#            print(f'{trimer}: {freq}')
-#        print("\n")
         
         with open(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
             pickle.dump(trimer_freq, file)
@@ -458,9 +648,6 @@ def generate_and_save_sequences_for_celltype(idata, celltype, input_dir, output_
     seq_neg_file='seq.vaedownsampletrue.'+idata+'.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
     
-    #print('x_pos_seq shape in generate_and_save_sequences_for_celltype():', x_pos_seq.shape)
-    #print('x_neg_seq shape in generate_and_save_sequences_for_celltype():', x_neg_seq.shape)
-    
     with torch.no_grad():
         pos_generated_samples = []
         condition_pos = torch.ones(50, 1).to(device)
@@ -478,37 +665,20 @@ def generate_and_save_sequences_for_celltype(idata, celltype, input_dir, output_
             neg_generated_samples.append(samples)
         neg_generated_samples = torch.cat(neg_generated_samples, 0)[:5 * x_neg_seq.shape[0]]
 
-        
-    #print(f'pos_generated_samples: {pos_generated_samples}')    
+
     _, pos_max_indices = torch.max(pos_generated_samples, dim=1)
     _, neg_max_indices = torch.max(neg_generated_samples, dim=1)
 
     pos_generated_sequences = indices_to_sequence(pos_max_indices)
     pos_trimer_freq_generated = get_trimer_frequencies(pos_generated_sequences)
-#    print(f"--- Pos Generated SEQUENCES ---")
-#    for trimer, freq in pos_trimer_freq_generated.items():
-#        print(f'{trimer}: {freq}')
-#    print("\n")
 
     neg_generated_sequences = indices_to_sequence(neg_max_indices)
     neg_trimer_freq_generated = get_trimer_frequencies(neg_generated_sequences)
-#    print(f"--- Neg Generated SEQUENCES ---")
-#    for trimer, freq in neg_trimer_freq_generated.items():
-#        print(f'{trimer}: {freq}')
-#    print("\n")
 
-    #plot_trimer_frequencies(pos_trimer_freq, pos_trimer_freq_generated, title=f"Positive Trimer Frequencies for {celltype}", save_filename=f"pos_trimer_{celltype}.png")
-    #plot_trimer_frequencies(neg_trimer_freq, neg_trimer_freq_generated, title=f"Negative Trimer Frequencies for {celltype}", save_filename=f"neg_trimer_{celltype}.png")
 
     pos_mse = sum(abs(pos_trimer_freq_generated[key] - pos_trimer_freq[key]) for key in pos_trimer_freq) / 64
     neg_mse = sum(abs(neg_trimer_freq_generated[key] - neg_trimer_freq[key]) for key in neg_trimer_freq) / 64
     avg_mse = (pos_mse + neg_mse) / 2
-    
-#    for key in pos_trimer_freq:
-#        print(f'key in pos_trimer_freq: {key}, pos_trimer_freq[key]: {pos_trimer_freq[key]}, pos_trimer_freq_generated[key]: {pos_trimer_freq_generated[key]}')
-#    print("\n")
-#    for key in neg_trimer_freq:
-#        print(f'key in neg_trimer_freq: {key}, neg_trimer_freq[key]: {neg_trimer_freq[key]}, neg_trimer_freq_generated[key]: {neg_trimer_freq_generated[key]}')
 
     if verbose==1:
         print('Before VAE, the pos and neg Sample Size: ',[x_pos_seq.shape[0],x_neg_seq.shape[0]])
