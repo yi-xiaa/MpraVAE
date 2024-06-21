@@ -49,7 +49,7 @@ pip3 install -r requirements --user
 ## Usage
 
 ## Example
-- We have an excel table of MPRA variants summary (chr,pos,label)
+- The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
 - R command line to take the summary table as input, then output the input file for deep learning. This step will output several .fasta files.
