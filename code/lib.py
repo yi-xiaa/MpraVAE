@@ -325,7 +325,7 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
     trainData_vae, valData_vae = genTrainData_vae(y_downsampletrue, x_seq_downsampletrue, y_vae, x_seq_vae, current_seed)
                 
 
-    model_savename = 'VAE' + celltype + '.pth'
+    model_savename = 'VAE_' + celltype + '.pth'
     model_vae = trainModel(trainData_vae, valData_vae, model_savename, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, num_kernels=num_kernels, dropout_rate=dropout_rate)
 
 
@@ -337,7 +337,7 @@ def read_fasta(file_name):
     for record in SeqIO.parse(file_name, "fasta"):
         cnt +=1
         seq = str(record.seq)[:]
-        if all(base in 'ATGC' for base in seq):  # Check if all characters are valid
+        if all(base in 'ATGC' for base in seq): 
             sequences.append(seq)
             
         if cnt == 50000:
@@ -349,7 +349,6 @@ def read_fasta(file_name):
 
 
 def indices_to_sequence(indices_data):
-    # Map indices to characters
     mapping = {0: 'A', 1: 'C', 2: 'G', 3: 'T'}
     sequences = [''.join([mapping[idx.item()] for idx in sequence]) for sequence in indices_data]
     return sequences
@@ -487,7 +486,7 @@ def train_epoch(epoch, model, train_loader, optimizer, device, lambda1=1e7, lamb
         data, conditions = data.to(device), conditions.to(device)
         optimizer.zero_grad()
         recon_batch, mu, log_var = model(data, conditions)
-#        print(f'recon_batch: {recon_batch}')
+
         combined_loss, recon_loss, trimer_diff_loss, kl_loss = loss_with_trimer_difference(recon_batch, data, mu, log_var, lambda1, lambda2)
         combined_loss.backward()
         optimizer.step()
@@ -680,10 +679,6 @@ def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, po
     neg_mse = sum(abs(neg_trimer_freq_generated[key] - neg_trimer_freq[key]) for key in neg_trimer_freq) / 64
     avg_mse = (pos_mse + neg_mse) / 2
 
-    if verbose==1:
-        print('Before VAE, the pos and neg Sample Size: ',[x_pos_seq.shape[0],x_neg_seq.shape[0]])
-        print('Before VAE, the Total Sample Size: ', x_pos_seq.shape[0] + x_neg_seq.shape[0])
-        print(f'Average MSE for {celltype}:', avg_mse)
     
     save_to_fasta(pos_generated_sequences, f"seq.vae.{celltype}.pos.fasta", output_dir=output_dir)
     save_to_fasta(neg_generated_sequences, f"seq.vae.{celltype}.neg.fasta", output_dir=output_dir)
