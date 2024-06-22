@@ -63,17 +63,6 @@ python /path/to/augment.py autoimmune_disease
 python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input_path "/path/to/your/input.fasta" --outfolder "your_output_folder/"
 ```
 
-## Documentation
-We provide several tutorials and user guide. If you find our tool useful for your research, please consider citing the MpraVAE manuscript.
-
-<table>
-  <tr>
-    <td><a href="URL_TO_USER_GUIDE">User guide</a></td>
-    <td><a href="URL_TO_PBMCS_TUTORIAL">Data Preprocess</a></td>
-    <td><a href="URL_TO_GRN_BENCHMARK">Data Augmentaion</a></td>
-  </tr>
-</table>
-
 ## Reference
 If you use `MpraVAE`, please cite:
 
