@@ -19,14 +19,6 @@ parser = argparse.ArgumentParser(description="Run analysis for a given cell type
 parser.add_argument("celltype", type=str, help="Cell type to process")
 args = parser.parse_args()
 celltype = args.celltype
-# celltypes = ["Jurkat"]
-# diseases = ["autoimmune_disease"]
-
-idata='data10'
-fractions = [0.2, 0.5, 1.0]
-fractions_json = ['0.2', '0.5', '1.0']
-
-NUM_ITERATIONS = 1
 
 data_folder = Path("/path/to/Data")
 input_dir = '/path/to/input_data_folder'
@@ -58,24 +50,15 @@ model = cVAE(latent_dim).to(device)
 lr = 2e-4
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-print(celltype)
-x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq = readData(idata, celltype)
-
-combinations = ['VAE']
-
-results = {celltype: {fraction: {combine: {'Accuracy': [],'AUC': [],'AUPRC': [],'f1': [],'precision': [],'recall': [],'R': [],'predsProb': [],'preds': [],'y_test': []} for combine in combinations} for fraction in fractions}}
-
 print('####################################')
 print('########### Celltype:', celltype, '##########')
 print('####################################')
-# Retrieve dropout_rate and num_kernels for the current celltype
 dropout_rate = 0.1
 num_kernels = (128, 256)
 
-x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq = readData(idata, celltype)
+x_pos_seq, x_neg_seq= readData(celltype)
     
-results = process_fractions_allmethods(celltype, fractions, combinations, x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, x_unlabeled_seq,
-                                           dropout_rate, num_kernels, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, NUM_ITERATIONS, results, input_dir, output_dir, 
+MpraVAE(celltype, x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, input_dir, output_dir, 
                                            data_folder, device, random_state)
     
 

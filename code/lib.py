@@ -136,11 +136,11 @@ def extract_features(sequence, k=3):
 
 
 # In[4]:
-def readData(idata,celltype):
+def readData(celltype):
     # true data
-    seq_pos_file='seq.'+idata+'.'+celltype+'.pos.fasta'
+    seq_pos_file='seq.'+'.'+celltype+'.pos.fasta'
     x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.'+idata+'.'+celltype+'.neg.fasta'
+    seq_neg_file='seq.'+'.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
 
     print('true, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
@@ -297,22 +297,22 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
     vae_x_pos_downsample = onehot_to_seq(x_pos_seq_downsample)
     vae_x_neg_downsample = onehot_to_seq(x_neg_seq_downsample)
 
-    save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.{idata}.{celltype}.pos.fasta", output_dir=input_dir)
-    save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.{idata}.{celltype}.neg.fasta", output_dir=input_dir)
+    save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.{celltype}.pos.fasta", output_dir=input_dir)
+    save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.{celltype}.neg.fasta", output_dir=input_dir)
                     
-    avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=600, batch_size=1024, latent_dim=64, lr=2e-4)
+    avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=600, batch_size=1024, latent_dim=64, lr=2e-4)
                         
     latent_dim = 64
     model = cVAE(latent_dim).to(device)
     lr = 2e-4
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-    pos_trimer_freq, neg_trimer_freq = process_sequences_for_celltype(idata, celltype, input_dir, output_dir)
-    generate_and_save_sequences_for_celltype(idata, celltype, input_dir= input_dir, output_dir= output_dir, pos_trimer_freq=pos_trimer_freq, neg_trimer_freq=neg_trimer_freq, verbose=(iteration == 0))
+    pos_trimer_freq, neg_trimer_freq = process_sequences_for_celltype(celltype, input_dir, output_dir)
+    generate_and_save_sequences_for_celltype(celltype, input_dir= input_dir, output_dir= output_dir, pos_trimer_freq=pos_trimer_freq, neg_trimer_freq=neg_trimer_freq, verbose=(iteration == 0))
                 
-    seq_pos_file_vae='seq.vae.'+idata+'.'+celltype+'.pos.fasta'
+    seq_pos_file_vae='seq.vae.'+'.'+celltype+'.pos.fasta'
     x_pos_seq_vae=onehot(data_folder/seq_pos_file_vae)
-    seq_neg_file_vae='seq.vae.'+idata+'.'+celltype+'.neg.fasta'
+    seq_neg_file_vae='seq.vae.'+'.'+celltype+'.neg.fasta'
     x_neg_seq_vae=onehot(data_folder/seq_neg_file_vae)
                 
     y_pos_vae=np.ones(x_pos_seq_vae.shape[0])
@@ -500,30 +500,30 @@ def train_epoch(epoch, model, train_loader, optimizer, device, lambda1=1e7, lamb
     return combined_loss.item(), recon_loss.item(), kl_loss.item(), trimer_diff_loss
 
 
-def process_sequences(idata, celltype, sequence_type, input_dir, output_dir):
-    file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{idata}.{celltype}.{sequence_type}.fasta')
+def process_sequences(celltype, sequence_type, input_dir, output_dir):
+    file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{celltype}.{sequence_type}.fasta')
     
     sequences = read_fasta(file_path)
     encoded_seqs = [one_hot_encode(seq) for seq in sequences]
 
-    np.save(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
+    np.save(os.path.join(output_dir, f'{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
 
     trimer_freq = get_trimer_frequencies(sequences)
 
-    with open(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
+    with open(os.path.join(output_dir, f'{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
         pickle.dump(trimer_freq, file)
 
-def train_model_for_celltype(idata, celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=1000, batch_size=1024, latent_dim=64, lr=2e-4):
+def train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=1000, batch_size=1024, latent_dim=64, lr=2e-4):
 
     for seq_type in ['neg', 'pos']:
-        process_sequences(idata, celltype, seq_type, input_dir, output_dir)
+        process_sequences(celltype, seq_type, input_dir, output_dir)
         
-    pos_encoded_data = np.load(f'{idata}_{celltype}_pos_encoded_data.npy', allow_pickle=True)
-    with open(f'{idata}_{celltype}_pos_trimer_freq.pkl', 'rb') as file:
+    pos_encoded_data = np.load(f'{celltype}_pos_encoded_data.npy', allow_pickle=True)
+    with open(f'{celltype}_pos_trimer_freq.pkl', 'rb') as file:
         pos_trimer_freq = pickle.load(file)
     
-    neg_encoded_data = np.load(f'{idata}_{celltype}_neg_encoded_data.npy', allow_pickle=True)
-    with open(f'{idata}_{celltype}_neg_trimer_freq.pkl', 'rb') as file:
+    neg_encoded_data = np.load(f'{celltype}_neg_encoded_data.npy', allow_pickle=True)
+    with open(f'{celltype}_neg_trimer_freq.pkl', 'rb') as file:
         neg_trimer_freq = pickle.load(file)
 
     neg_encoded_data = neg_encoded_data.transpose(0, 2, 1)
@@ -616,18 +616,18 @@ def save_to_fasta(sequence_list, filename, output_dir, header_prefix="seq"):
             f.write(f">{header_prefix}{idx}\n")
             f.write(seq + "\n")
 
-def process_sequences_for_celltype(idata, celltype, input_dir, output_dir):
+def process_sequences_for_celltype(celltype, input_dir, output_dir):
     def read_and_process(sequence_type):
-        file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{idata}.{celltype}.{sequence_type}.fasta')
+        file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{celltype}.{sequence_type}.fasta')
         
         sequences = read_fasta(file_path)
         encoded_seqs = [one_hot_encode(seq) for seq in sequences]
         
-        np.save(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
+        np.save(os.path.join(output_dir, f'{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
 
         trimer_freq = get_trimer_frequencies(sequences)
         
-        with open(os.path.join(output_dir, f'{idata}_{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
+        with open(os.path.join(output_dir, f'{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
             pickle.dump(trimer_freq, file)
         
         return trimer_freq
@@ -638,14 +638,14 @@ def process_sequences_for_celltype(idata, celltype, input_dir, output_dir):
     return pos_trimer_freq, neg_trimer_freq
 
 
-def generate_and_save_sequences_for_celltype(idata, celltype, input_dir, output_dir, pos_trimer_freq, neg_trimer_freq, verbose=0):
+def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, pos_trimer_freq, neg_trimer_freq, verbose=0):
     model_path = os.path.join(input_dir, f'test_cvae.{celltype}.pth')
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
-    seq_pos_file='seq.vaedownsampletrue.'+idata+'.'+celltype+'.pos.fasta'
+    seq_pos_file='seq.vaedownsampletrue.'+'.'+celltype+'.pos.fasta'
     x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.vaedownsampletrue.'+idata+'.'+celltype+'.neg.fasta'
+    seq_neg_file='seq.vaedownsampletrue.'+'.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
     
     with torch.no_grad():
@@ -685,8 +685,8 @@ def generate_and_save_sequences_for_celltype(idata, celltype, input_dir, output_
         print('Before VAE, the Total Sample Size: ', x_pos_seq.shape[0] + x_neg_seq.shape[0])
         print(f'Average MSE for {celltype}:', avg_mse)
     
-    save_to_fasta(pos_generated_sequences, f"seq.vae.{idata}.{celltype}.pos.fasta", output_dir=output_dir)
-    save_to_fasta(neg_generated_sequences, f"seq.vae.{idata}.{celltype}.neg.fasta", output_dir=output_dir)
+    save_to_fasta(pos_generated_sequences, f"seq.vae.{celltype}.pos.fasta", output_dir=output_dir)
+    save_to_fasta(neg_generated_sequences, f"seq.vae.{celltype}.neg.fasta", output_dir=output_dir)
     
     
     

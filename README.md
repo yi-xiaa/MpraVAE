@@ -55,7 +55,7 @@ Rscript /path/to/fasta_generation.R --data data/input.csv --output /path/to/outp
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
-python /path/to/main.py autoimmune_disease
+python /path/to/augment.py autoimmune_disease
 ```
 
 - Python command line for classifier to give prediction of variants in input.fasta
