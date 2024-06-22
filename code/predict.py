@@ -3,9 +3,7 @@ from numpy import array
 from random import sample,seed
 import time
 import matplotlib.pyplot as plt
-#from statannot import add_stat_annotation
 import pandas as pd
-#import numpy as np
 from Bio import SeqIO
 import h5py
 import seaborn as sns
@@ -18,8 +16,6 @@ import warnings
 import time
 import sys
 
-
-#from numpy import argmax
 from sklearn.metrics import roc_curve,auc,f1_score,recall_score,precision_score,accuracy_score
 from sklearn import metrics
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
@@ -42,14 +38,14 @@ warnings.filterwarnings("ignore")
 class CNN_single1(nn.Module):
     def __init__(self, num_kernels=(128, 256), dropout_rate=0.1):
         super(CNN_single1, self).__init__()
-        # Convolutional layers
+
         self.Conv1 = nn.Conv1d(in_channels=4, out_channels=num_kernels[0], kernel_size=4)
         self.Conv2 = nn.Conv1d(in_channels=num_kernels[0], out_channels=num_kernels[1], kernel_size=4)
         self.Maxpool = nn.MaxPool1d(kernel_size=4, stride=4)
-        # Dropout
+
         self.Drop = nn.Dropout(p=dropout_rate)
-        # Linear layers - adjust the input size based on num_kernels
-        self.Linear1 = nn.Linear(61 * num_kernels[1], 128)  # Update size accordingly
+
+        self.Linear1 = nn.Linear(61 * num_kernels[1], 128)
         self.Linear2 = nn.Linear(128, 32)
         self.Linear3 = nn.Linear(32, 2)
         self.logSoftmax = nn.LogSoftmax(dim=1)
@@ -83,16 +79,11 @@ class CNN_single1(nn.Module):
 def onehot(fafile):
     x=[]
     for seq_record in SeqIO.parse(fafile, "fasta"):
-        #print(seq_record.id)
-        #print(seq_record.seq)
-        #get sequence into an array
+
         seq_array = array(list(seq_record.seq))
-        #integer encode the sequence
         label_encoder = LabelEncoder()
         integer_encoded_seq = label_encoder.fit_transform(seq_array)
-        #one hot the sequence
         onehot_encoder = OneHotEncoder(sparse=False)
-        #reshape because that's what OneHotEncoder likes
         integer_encoded_seq = integer_encoded_seq.reshape(len(integer_encoded_seq), 1)
         onehot_encoded_seq = onehot_encoder.fit_transform(integer_encoded_seq)
         x.append(onehot_encoded_seq)        
