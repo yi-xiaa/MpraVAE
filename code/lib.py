@@ -326,7 +326,7 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
                 
 
     model_savename = 'VAE' + celltype + '.pth'
-    model_vae = trainModel(trainData_vae, valData_vae, model_savename, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, verbose=0, num_kernels=num_kernels, dropout_rate=dropout_rate)
+    model_vae = trainModel(trainData_vae, valData_vae, model_savename, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, num_kernels=num_kernels, dropout_rate=dropout_rate)
 
 
 # In[1]:

@@ -99,33 +99,54 @@ def onehot(fafile):
     x = array(x)
     return x
 
+# In[8]:
+
+def eval_model(preds,predsProb,y_test,verbose=0):    
+    y_test_prob = predsProb
+    y_test_classes=preds
+    
+    fpr, tpr, thresholds = roc_curve(y_test, y_test_prob)
+    auc_test = auc(fpr, tpr)
+    precision, recall, thresholds_pr = precision_recall_curve(y_test, y_test_prob)
+    auprc_test = auc(recall, precision)
+    
+    acc_test=accuracy_score(y_test_classes, y_test)
+    f1_test = f1_score(y_test_classes, y_test, average='binary')
+    recall_test = recall_score(y_test_classes, y_test, average='binary')
+    precision_test = precision_score(y_test_classes, y_test, average='binary')
+    R_test=pearsonr(y_test, y_test_prob)[0]
+    
+    acc_test=round(acc_test,3)
+    auc_test=round(auc_test,3)
+    auprc_test = round(auprc_test, 3)
+    f1_test=round(f1_test,3)
+    precision_test=round(precision_test,3)
+    recall_test=round(recall_test,3)
+    R_test=round(R_test,3)
+    
+    if verbose==1:
+        get_ipython().run_line_magic('matplotlib', 'inline')
+        print(f'Test: acc {acc_test:.3f}, auc {auc_test:.3f}, auprc {auprc_test:.3f}, f1 {f1_test:.3f}, precision {precision_test:.3f}, recall {recall_test:.3f}, R {R_test:.3f}\n')
+    return [acc_test, auc_test, auprc_test, f1_test, precision_test, recall_test, R_test, predsProb, preds, y_test]
+
+
 def testModel(model,model_savename,testData_seq,BATCH_SIZE=64,verbose=0,predictonly = 0):
 
     device = torch.device("cpu")
 
     testDataLoader = DataLoader(testData_seq, batch_size=BATCH_SIZE)
-
-    #print("[INFO]  resume best model...")
     
     resume(model, model_savename)
 
-    # we can now evaluate the network on the test set
-    #print("[INFO] evaluating network...")
-    # turn off autograd for testing evaluation
     with torch.no_grad():
-        # set the model in evaluation mode
         model.eval()
 
-        # initialize a list to store our predictions
         preds = []
         predsProb = []
         ys = []
 
-        # loop over the test set
         for x in testDataLoader:
-            # send the input to the device
             x = x.to(device,dtype=torch.float)
-            # make the predictions and add them to the list
             pred = model(x)
             preds.extend(pred.argmax(axis=1).cpu().numpy())
             predsProb.extend(pred[:,1].cpu().numpy())

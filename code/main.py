@@ -8,15 +8,11 @@ import sys
 import torch
 import warnings
 
-with open("/path/to/libMPRA.py") as f:
+with open("/path/to/lib.py") as f:
     exec(f.read())
-with open("/path/to/modelMPRA.py") as f:
+with open("/path/to/model.py") as f:
     exec(f.read())
-with open("/path/to/trainMPRA.py") as f:
-    exec(f.read())
-with open("/path/to/libcVAE.py") as f:
-    exec(f.read())
-with open("/path/to/modelcVAE.py") as f:
+with open("/path/to/train.py") as f:
     exec(f.read())
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
