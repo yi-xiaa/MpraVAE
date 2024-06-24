@@ -67,6 +67,13 @@ Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
 python /path/to/augment.py autoimmune_disease
+
+python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder --fasta_output_dir /path/to/fasta_output_folder
+
+
+for example:
+module load python
+python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
 - Python command line for classifier to give prediction of variants in input.fasta

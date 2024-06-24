@@ -38,7 +38,7 @@ fasta_generation<-function(dat,id.pos,id.neg,name.export,outpath){
 
 
 option_list = list(
-  make_option(c("-d", "--data"), type="character", default=NULL, help="Path to the input data", metavar="character"),
+  make_option(c("-d", "--data"), type="character", default="./", help="Path to the input data", metavar="character"),
   make_option(c("-o", "--output"), type="character", default="./", help="Output directory", metavar="character")
 )
 

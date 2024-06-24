@@ -138,9 +138,9 @@ def extract_features(sequence, k=3):
 # In[4]:
 def readData(celltype):
     # true data
-    seq_pos_file='seq.'+'.'+celltype+'.pos.fasta'
+    seq_pos_file='seq.'+celltype+'.pos.fasta'
     x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.'+'.'+celltype+'.neg.fasta'
+    seq_neg_file='seq.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
 
     print('true, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
@@ -310,9 +310,9 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
     pos_trimer_freq, neg_trimer_freq = process_sequences_for_celltype(celltype, input_dir, output_dir)
     generate_and_save_sequences_for_celltype(celltype, input_dir= input_dir, output_dir= output_dir, pos_trimer_freq=pos_trimer_freq, neg_trimer_freq=neg_trimer_freq, verbose=(iteration == 0))
                 
-    seq_pos_file_vae='seq.vae.'+'.'+celltype+'.pos.fasta'
+    seq_pos_file_vae='seq.vae.'+celltype+'.pos.fasta'
     x_pos_seq_vae=onehot(data_folder/seq_pos_file_vae)
-    seq_neg_file_vae='seq.vae.'+'.'+celltype+'.neg.fasta'
+    seq_neg_file_vae='seq.vae.'+celltype+'.neg.fasta'
     x_neg_seq_vae=onehot(data_folder/seq_neg_file_vae)
                 
     y_pos_vae=np.ones(x_pos_seq_vae.shape[0])
@@ -642,9 +642,9 @@ def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, po
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
-    seq_pos_file='seq.vaedownsampletrue.'+'.'+celltype+'.pos.fasta'
+    seq_pos_file='seq.vaedownsampletrue.'+celltype+'.pos.fasta'
     x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.vaedownsampletrue.'+'.'+celltype+'.neg.fasta'
+    seq_neg_file='seq.vaedownsampletrue.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
     
     with torch.no_grad():
