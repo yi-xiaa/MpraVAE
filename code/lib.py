@@ -156,7 +156,7 @@ def downsample_data(x, y, fraction):
 
 
 # In[ ]:
-def split_testdata(x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, test_size=0.2, seed=1234, verbose=0):
+def split_testdata(x_pos_seq, x_neg_seq, test_size=0.2, seed=1234, verbose=0):
     np.random.seed(int(seed))
     
     # For True data
@@ -209,7 +209,7 @@ def genData(x_pos_seq,x_neg_seq,seed=1234):
 
 # In[ ]:
 
-def genData_downsample(x_pos_seq, x_neg_seq, x_pos_seq_rev, x_neg_seq_rev, x_pos_seq_crop, x_neg_seq_crop, seed=1234, fraction=1.0, verbose=0):
+def genData_downsample(x_pos_seq, x_neg_seq, seed=1234, fraction=1.0, verbose=0):
     np.random.seed(int(seed))
     
     # True data
@@ -284,10 +284,10 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
                                              data_folder, device, random_state):
 
     x_pos_seq_trainval, x_neg_seq_trainval, testData, testData_indices, x_test_noswap, y_test=split_testdata(
-            x_pos_seq, x_neg_seq, test_size=0, seed=current_seed, verbose=1)
+            x_pos_seq, x_neg_seq, test_size=0, seed=seed, verbose=1)
 
     y, x_seq, x_pos_seq_downsample, y_pos_downsample, x_neg_seq_downsample, y_neg_downsample = genData_downsample(
-                x_pos_seq_trainval, x_neg_seq_trainval, seed=current_seed, verbose=0)
+                x_pos_seq_trainval, x_neg_seq_trainval, seed=seed, verbose=0)
 
     y_pos_downsample_vae = np.ones(x_pos_seq_downsample.shape[0])
     y_neg_downsample_vae = np.zeros(x_neg_seq_downsample.shape[0])
@@ -322,7 +322,7 @@ def MpraVAE(celltype,x_pos_seq, x_neg_seq, dropout_rate, num_kernels, BATCH_SIZE
     x_seq_vae=np.swapaxes(x_seq_vae,2,1)
     x_seq_vae,y_vae=shuffleXY(x_seq_vae,y_vae)
 
-    trainData_vae, valData_vae = genTrainData_vae(y_downsampletrue, x_seq_downsampletrue, y_vae, x_seq_vae, current_seed)
+    trainData_vae, valData_vae = genTrainData_vae(y_downsampletrue, x_seq_downsampletrue, y_vae, x_seq_vae, seed)
                 
 
     model_savename = 'VAE_' + celltype + '.pth'
@@ -517,12 +517,12 @@ def train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambd
     for seq_type in ['neg', 'pos']:
         process_sequences(celltype, seq_type, input_dir, output_dir)
         
-    pos_encoded_data = np.load(f'{celltype}_pos_encoded_data.npy', allow_pickle=True)
-    with open(f'{celltype}_pos_trimer_freq.pkl', 'rb') as file:
+    pos_encoded_data = np.load(os.path.join(output_dir, f'{celltype}_pos_encoded_data.npy'), allow_pickle=True)
+    with open(os.path.join(output_dir, f'{celltype}_pos_trimer_freq.pkl'), 'rb') as file:
         pos_trimer_freq = pickle.load(file)
     
-    neg_encoded_data = np.load(f'{celltype}_neg_encoded_data.npy', allow_pickle=True)
-    with open(f'{celltype}_neg_trimer_freq.pkl', 'rb') as file:
+    neg_encoded_data = np.load(os.path.join(output_dir, f'{celltype}_neg_encoded_data.npy'), allow_pickle=True)
+    with open(os.path.join(output_dir, f'{celltype}_neg_trimer_freq.pkl'), 'rb') as file:
         neg_trimer_freq = pickle.load(file)
 
     neg_encoded_data = neg_encoded_data.transpose(0, 2, 1)

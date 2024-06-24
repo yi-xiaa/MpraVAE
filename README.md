@@ -72,7 +72,8 @@ python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py
 
 
 for example:
-module load python
+module load conda
+conda activate your_environment
 python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
