@@ -15,6 +15,16 @@ We implement a R shinny webserver to predict the regulatory effects of genetic v
 
 - R
 ```R
+install.packages(c("optparse", "dplyr", "data.table"))
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", 
+                       "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))
+
+
+
 install.packages(c("dplyr", "data.table"))
 
 if (!requireNamespace("BiocManager", quietly = TRUE))

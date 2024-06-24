@@ -45,7 +45,7 @@ option_list = list(
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
 
-setwd(opt$output)
+#setwd(opt$output)
 dat = fread(opt$data)
 print(dim(dat))
 print(summary(dat$fdr))
