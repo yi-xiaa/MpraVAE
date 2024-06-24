@@ -41,7 +41,7 @@ git clone https://github.com/yi-xiaa/MpraVAE
 pip3 install -r requirements --user
 ```
 
-
+ 
 ## Usage
 
 ## Example
@@ -67,7 +67,6 @@ python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input
 If you use `MpraVAE`, please cite:
 
     (awaiting for formal link)
-
 
 
 [lichen-lab](https://github.com/lichen-lab "https://github.com/lichen-lab")
