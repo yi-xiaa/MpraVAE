@@ -22,17 +22,13 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", 
                        "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))
+```
 
+```command
+Rscript -e 'install.packages(c("optparse", "dplyr", "data.table"))'
+Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'
+Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))'
 
-
-install.packages(c("dplyr", "data.table"))
-
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install(c("metap", "GenomicRanges", "ChIPpeakAnno", "BSgenome.Hsapiens.UCSC.hg19", 
-                       "BSgenome.Hsapiens.UCSC.hg38", "Matrix", "SummarizedExperiment", 
-                       "TFBSTools", "JASPAR2020"))
 ```
 
 MpraVAE is implemented by Python3.
@@ -61,6 +57,10 @@ pip3 install -r requirements --user
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
 Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
+
+For example:
+cd .../MpraVAE/
+Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 ```
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
