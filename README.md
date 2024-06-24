@@ -50,7 +50,7 @@ pip3 install -r requirements --user
 
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
-Rscript /path/to/fasta_generation.R --data data/input.csv --output /path/to/output
+Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
 ```
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
