@@ -57,8 +57,9 @@ pip3 install -r requirements --user
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
 Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
-
+```
 For example:
+```command
 cd .../MpraVAE/
 Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 ```
