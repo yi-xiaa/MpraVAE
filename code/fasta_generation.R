@@ -72,7 +72,7 @@ for(icelltype in 1:length(celltypes)){
   
   message(sum(id.pos),' ',sum(id.neg))
   
-  createRevAndCropSeq(dat1,id.pos,id.neg,paste(celltypes[icelltype],sep='.'), opt$output)
+  fasta_generation(dat1,id.pos,id.neg,paste(celltypes[icelltype],sep='.'), opt$output)
 }
 
 # by disease
