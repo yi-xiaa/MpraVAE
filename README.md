@@ -6,7 +6,7 @@ Predicting the functional impact of genetic variants in non-coding regions is ch
 
 MpraVAE, a deep generative model, addresses this limitation by augmenting the training sample size of labelled variants. Benchmarking on multiple MPRA datasets shows that MpraVAE significantly improves the prediction of regulatory variants compared to conventional data augmentation methods and existing scoring techniques. Taking autoimmune diseases as one example, MpraVAE enabled genome-wide de novo prediction of regulatory variants, revealing their enrichment in enhancers, active histone marks, immune-related cell types, and key regulatory sites. These variants also facilitated the discovery of immune-related genes through integration with PCHi-C and DNase-seq data, highlighting MpraVAE's importance in genetic and gene discovery for complex traits.
 
-![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/Figure1.png)
+![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/Figure_1.png)
 
 ## MpraVAE Webserver
 We implement a R shinny webserver to predict the regulatory effects of genetic variants in GWAS loci, eQTLs and various genomic features. The webserver can be accessed from [link](https://mpravae.rc.ufl.edu/).
