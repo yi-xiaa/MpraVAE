@@ -13,24 +13,6 @@ We implement a R shinny webserver to predict the regulatory effects of genetic v
 
 ## Requirements and Installation
 
-- R
-```R
-install.packages(c("optparse", "dplyr", "data.table"))
-
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", 
-                       "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))
-```
-
-```command
-Rscript -e 'install.packages(c("optparse", "dplyr", "data.table"))'
-Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'
-Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))'
-
-```
-
 MpraVAE is implemented by Python3.
 - Python >= 3.10.12
 - numpy >= 1.25.2
@@ -47,8 +29,39 @@ git clone https://github.com/yi-xiaa/MpraVAE
 pip3 install -r requirements --user
 ```
 
- 
+- R
+```R
+install.packages(c("optparse", "dplyr", "data.table"))
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", 
+                       "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))
+```
+
+```command
+Rscript -e 'install.packages(c("optparse", "dplyr", "data.table"))'
+Rscript -e 'if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")'
+Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSgenome.Hsapiens.UCSC.hg19", "Matrix", "SummarizedExperiment", "TFBSTools", "JASPAR2020"))'
+```
+
+
 ## Usage
+- R command line to take the summary table as input, then output the fasta files for deep learning.
+```command
+Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
+```
+
+- Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
+```command
+python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder --fasta_output_dir /path/to/fasta_output_folder
+```
+
+- Python command line for classifier to give prediction of variants in input.fasta
+```command
+python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input_path "/path/to/your/input.fasta" --outfolder "your_output_folder/"
+```
 
 ## Example
 - The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as [MPRA_autoimmune](https://github.com/yi-xiaa/MpraVAE/blob/main/data/MPRA_autoimmune.csv).
@@ -56,30 +69,20 @@ pip3 install -r requirements --user
 
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
-Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
-```
-For example:
-```command
 cd .../MpraVAE/
 Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 ```
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
-python /path/to/augment.py autoimmune_disease
-
-python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder --fasta_output_dir /path/to/fasta_output_folder
-
-
-for example:
 module load conda
 conda activate your_environment
 python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
-- Python command line for classifier to give prediction of variants in input.fasta
+- Python command line for classifier to give prediction of variants in example.fasta
 ```command
-python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input_path "/path/to/your/input.fasta" --outfolder "your_output_folder/"
+python code/predict.py --modelname "model/VAE_autoimmune_disease.pth" --seq_input_path "data/example.fasta" --outfolder "data/"
 ```
 
 ## Reference
