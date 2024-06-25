@@ -76,7 +76,7 @@ Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
 module load conda
-conda activate your_environment
+conda activate your_environment_name
 python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
