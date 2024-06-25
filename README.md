@@ -58,7 +58,7 @@ Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/out
 python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder --fasta_output_dir /path/to/fasta_output_folder
 ```
 
-- Python command line for classifier to give prediction of variants in input.fasta
+- Python command line for classifier to give prediction of variants in input.fasta and save as an probs_out.csv file.
 ```command
 python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input_path "/path/to/your/input.fasta" --outfolder "your_output_folder/"
 ```
@@ -80,9 +80,9 @@ conda activate your_environment
 python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
-- Python command line for classifier to give prediction of variants in example.fasta
+- Python command line for classifier to give prediction of variants in example.fasta, the prediction probability would be save as an probs_out.csv in the result folder.
 ```command
-python code/predict.py --modelname "model/VAE_autoimmune_disease.pth" --seq_input_path "data/example.fasta" --outfolder "data/"
+python code/predict.py --modelname "model/VAE_autoimmune_disease.pth" --seq_input_path "data/example.fasta" --outfolder "result/"
 ```
 
 ## Reference
