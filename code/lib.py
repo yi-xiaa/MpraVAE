@@ -268,7 +268,6 @@ def genTrainData_vae(y, x_seq, y_vae, x_seq_vae, random_state, verbose=0):
 
 # In[ ]:
 
-
 def calculate_average_sample_sizes_interlaced(sample_sizes, num_iterations, fractions):
     fraction_averages = {}
 

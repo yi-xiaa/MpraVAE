@@ -56,9 +56,6 @@ with open(train_path) as f:
 
 
 
-
-
-
 torch.cuda.is_available()
 torch.cuda.device_count()
 

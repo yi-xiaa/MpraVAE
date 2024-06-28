@@ -143,7 +143,6 @@ def testModel(model,model_savename,testData_seq,BATCH_SIZE=64,verbose=0,predicto
             preds.extend(pred.argmax(axis=1).cpu().numpy())
             predsProb.extend(pred[:,1].cpu().numpy())
 
-
     preds=np.array(preds)
     predsProb=np.array(predsProb)
     ys=np.array(ys)

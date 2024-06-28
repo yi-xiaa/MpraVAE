@@ -36,7 +36,6 @@ class MyDataset(Dataset):
 
 # In[3]:
 
-
 class MyDataset2(Dataset):
     def __init__(self, seqs, reads):
         self.seqs = seqs

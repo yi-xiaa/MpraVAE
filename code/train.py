@@ -91,3 +91,4 @@ def trainModel(trainData_seqs,valData_seqs, model_savename,BATCH_SIZE,INIT_LR,ea
             
     return model
 
+
