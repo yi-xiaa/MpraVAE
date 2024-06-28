@@ -48,6 +48,32 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 
 
 ## Usage
+- Command line to take summary data (.csv file) as input and output fasta files, the output is seq.[celltype/disease].pos.fasta and seq.[celltype/disease].neg.fasta
+```command
+Rscript  fasta_generation.R MPRA_autoimmune.csv 
+```
+
+- Command line to convert the fasta files into hdf5 format, the output should be data.h5
+```command
+python hdf5_generation.py pos.fasta, neg.fasta
+```
+
+- Command line to train MpraVAE model for synthetic data generation, the output should be MpraVAE.pth
+```command
+python MpraVAE_train.py data.h5
+```
+
+- Command line to use MpraVAE model to generate synthetic data, the output should be synthetic_data.h5 (observed + synthetic data)
+```command
+python augment.py  MpraVAE.pth data.h5
+```
+
+
+
+
+
+
+
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
 Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
