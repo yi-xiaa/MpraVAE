@@ -70,25 +70,6 @@ python augment.py  MpraVAE.pth data.h5
 
 
 
-
-
-
-
-- R command line to take the summary table as input, then output the fasta files for deep learning.
-```command
-Rscript /path/to/fasta_generation.R --data /data/input.csv --output /path/to/output_folder
-```
-
-- Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
-```command
-python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder --fasta_output_dir /path/to/fasta_output_folder
-```
-
-- Python command line for classifier to give prediction of variants in input.fasta and save as an probs_out.csv file.
-```command
-python /path/to/predict.py --modelname "path/to/your_model_name.pth" --seq_input_path "/path/to/your/input.fasta" --outfolder "your_output_folder/"
-```
-
 ## Example
 - The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as [MPRA_autoimmune](https://github.com/yi-xiaa/MpraVAE/blob/main/data/MPRA_autoimmune.csv).
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
