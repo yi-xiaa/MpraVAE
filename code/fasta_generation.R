@@ -8,6 +8,9 @@ library(Matrix)
 library(SummarizedExperiment)
 library(TFBSTools)
 library(JASPAR2020)
+library(BSgenome)
+library(GenomicRanges)
+library(Biostrings)
 
 extendReg<-function(gr,ext=500){
   start(gr)=start(gr)-ext
@@ -15,7 +18,7 @@ extendReg<-function(gr,ext=500){
   gr
 }
 
-fasta_generation<-function(dat,id.pos,id.neg,name.export,outpath){
+fasta_generation<-function(dat,id.pos,id.neg,name.export,outpath, test_size){
   if(unique(dat$genome)=='hg38'){
     genome=BSgenome.Hsapiens.UCSC.hg38
   }else{
@@ -30,16 +33,34 @@ fasta_generation<-function(dat,id.pos,id.neg,name.export,outpath){
   seq.ext=getSeq(genome,gr.ext)
   seq.ext.pos=seq.ext[id.pos]
   seq.ext.neg=seq.ext[id.neg]
+  
   names(seq.ext.pos)=paste0('pos',1:length(seq.ext.pos))
   names(seq.ext.neg)=paste0('neg',1:length(seq.ext.neg))
-  writeXStringSet(seq.ext.pos,file=file.path(outpath,paste0('seq.',name.export,'.pos.fasta')))
-  writeXStringSet(seq.ext.neg,file=file.path(outpath,paste0('seq.',name.export,'.neg.fasta')))
-}
 
+  num_test_pos <- ceiling(length(seq.ext.pos) * test_size)
+  num_test_neg <- ceiling(length(seq.ext.neg) * test_size)
+  
+  test_pos_indices <- sample(seq_along(seq.ext.pos), num_test_pos)
+  test_neg_indices <- sample(seq_along(seq.ext.neg), num_test_neg)
+  
+  train_pos_indices <- setdiff(seq_along(seq.ext.pos), test_pos_indices)
+  train_neg_indices <- setdiff(seq_along(seq.ext.neg), test_neg_indices)
+  
+  seq.train.pos <- seq.ext.pos[train_pos_indices]
+  seq.train.neg <- seq.ext.neg[train_neg_indices]
+  seq.test.pos <- seq.ext.pos[test_pos_indices]
+  seq.test.neg <- seq.ext.neg[test_neg_indices]
+  
+  writeXStringSet(seq.train.pos, file = file.path(outpath, paste0('train.', name.export, '.pos.fasta')))
+  writeXStringSet(seq.train.neg, file = file.path(outpath, paste0('train.', name.export, '.neg.fasta')))
+  writeXStringSet(seq.test.pos, file = file.path(outpath, paste0('test.', name.export, '.pos.fasta')))
+  writeXStringSet(seq.test.neg, file = file.path(outpath, paste0('test.', name.export, '.neg.fasta')))
+}
 
 option_list = list(
   make_option(c("-d", "--data"), type="character", default="./", help="Path to the input data", metavar="character"),
-  make_option(c("-o", "--output"), type="character", default="./", help="Output directory", metavar="character")
+  make_option(c("-o", "--output"), type="character", default="./", help="Output directory", metavar="character"),
+  make_option(c("-t", "--test_size"), type="numeric", default=0.2, help="Proportion of data to be used for testing", metavar="numeric")
 )
 
 opt_parser = OptionParser(option_list=option_list)
@@ -72,7 +93,7 @@ for(icelltype in 1:length(celltypes)){
   
   message(sum(id.pos),' ',sum(id.neg))
   
-  fasta_generation(dat1,id.pos,id.neg,paste(celltypes[icelltype],sep='.'), opt$output)
+  fasta_generation(dat1,id.pos,id.neg,paste(celltypes[icelltype],sep='.'), opt$output, opt$test_size)
 }
 
 # by disease
@@ -87,7 +108,7 @@ for (idisease in diseases) {
   
   message(sum(id.pos), ' ', sum(id.neg))
   
-  fasta_generation(dat1, id.pos, id.neg, paste(idisease, sep = '.'), opt$output)
+  fasta_generation(dat1, id.pos, id.neg, paste(idisease, sep = '.'), opt$output, opt$test_size)
 }
 
 

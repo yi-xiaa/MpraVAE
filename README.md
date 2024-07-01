@@ -48,9 +48,9 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 
 
 ## Usage
-- Command line to take summary data (.csv file) as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta, test.[celltype/disease].neg.fasta
+- Command line to take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
 ```command
-Rscript  fasta_generation.R MPRA_autoimmune.csv 
+Rscript /path/to/fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
 ```
 
 - Command line to convert the fasta files into hdf5 format, the output should be train_data.h5 and test_data.h5
@@ -86,8 +86,9 @@ Python predict.py CNN.pth test_data.h5
 
 - R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
+module load R
 cd .../MpraVAE/
-Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
+Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/ --test_size 0.2
 ```
 
 - Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
