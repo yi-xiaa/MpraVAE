@@ -136,16 +136,33 @@ def extract_features(sequence, k=3):
 
 
 # In[4]:
-def readData(celltype):
-    # true data
-    seq_pos_file='seq.'+celltype+'.pos.fasta'
+
+def save_to_h5(data, filename):
+    with h5py.File(filename, 'w') as f:
+        f.create_dataset('data', data=data)
+
+def readData(celltype, data_folder):
+    # train data
+    seq_pos_file='train.'+celltype+'.pos.fasta'
     x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.'+celltype+'.neg.fasta'
+    seq_neg_file='train.'+celltype+'.neg.fasta'
     x_neg_seq=onehot(data_folder/seq_neg_file)
 
-    print('true, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
+    # test data
+    test_pos_file='test.'+celltype+'.pos.fasta'
+    x_test_pos_seq=onehot(data_folder/seq_pos_file)
+    test_neg_file='test.'+celltype+'.neg.fasta'
+    x_test_neg_seq=onehot(data_folder/seq_neg_file)
 
-    return x_pos_seq,x_neg_seq
+    print('train data, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
+    print('test data, pos and neg: ',[x_test_pos_seq.shape,x_test_neg_seq.shape])
+
+    save_to_h5(x_pos_seq, data_folder / f'train.{celltype}.pos.h5')
+    save_to_h5(x_neg_seq, data_folder / f'train.{celltype}.neg.h5')
+    save_to_h5(x_test_pos_seq, data_folder / f'test.{celltype}.pos.h5')
+    save_to_h5(x_test_neg_seq, data_folder / f'test.{celltype}.neg.h5')
+
+    return x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq
 
 
 # In[ ]:

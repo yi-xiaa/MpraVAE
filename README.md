@@ -53,19 +53,19 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 Rscript /path/to/fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
 ```
 
-- Command line to convert the fasta files into hdf5 format, the output should be train_data.h5 and test_data.h5
+- Command line to convert the fasta files into hdf5 format, the output would be train_data.h5 and test_data.h5 files.
 ```command
-python hdf5_generation.py train.[celltype/disease].pos.fasta train.[celltype/disease].neg.fasta test.[celltype/disease].pos.fasta test.[celltype/disease].neg.fasta
+python /path/to/hdf5_generation.py celltype_name/disease_name --lib_path /path/to/lib.py --data_folder /path/to/Data
 ```
 
-- Command line to train MpraVAE model for synthetic data generation, the output should be MpraVAE.pth
+- Command line to train MpraVAE model for synthetic data generation using train.[celltype/disease].pos.fasta and train.[celltype/disease].neg.fasta in data_folder, the output would be MpraVAE.{celltype}.pth
 ```command
-python MpraVAE_train.py train_data.h5
+python /path/to/MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
 
 - Command line to generate synthetic data using the MpraVAE model, specify the multiplier for the sample size relative to the observed data. The output will be synthetic_data.h5 containing both observed and synthetic data.
 ```command
-python augment.py MpraVAE.pth train_data.h5 --multiplier 6
+python /path/to/augment.py /path/to/MpraVAE.{celltype}.pth train_data.h5 --multiplier 6
 ```
 
 - Command line to train CNN classifier using MpraVAE synthetic data, the output is CNN.pth
