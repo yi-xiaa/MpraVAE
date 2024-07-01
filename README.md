@@ -85,6 +85,8 @@ python /path/to/predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
 ```command
+git clone https://github.com/yi-xiaa/MpraVAE
+
 module load R
 cd .../MpraVAE/
 
