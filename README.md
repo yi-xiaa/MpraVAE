@@ -101,8 +101,8 @@ python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path co
 
 python code/CNN_train.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/
 
-python code/predict.py --modelname "model/CNN_autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.pos.fasta" --outfolder "result/"
-python code/predict.py --modelname "model/CNN_autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.neg.fasta" --outfolder "result/"
+python code/predict.py --modelname "model/CNN.autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.pos.fasta" --outfolder "result/"
+python code/predict.py --modelname "model/CNN.autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.neg.fasta" --outfolder "result/"
 ```
 
 ## Reference
