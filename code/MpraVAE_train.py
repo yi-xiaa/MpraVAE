@@ -13,7 +13,6 @@ parser = argparse.ArgumentParser(description="Run analysis for a given cell type
 parser.add_argument("celltype", type=str, help="Cell type to process")
 parser.add_argument("--lib_path", type=str, required=True, help="Path to lib.py")
 parser.add_argument("--model_path", type=str, required=True, help="Path to model.py")
-parser.add_argument("--train_path", type=str, required=True, help="Path to train.py")
 parser.add_argument("--data_folder", type=str, required=True, help="Path to Data folder")
 parser.add_argument("--input_dir", type=str, required=True, help="Path to input data folder")
 parser.add_argument("--output_dir", type=str, required=True, help="Path to output folder")
@@ -22,7 +21,6 @@ args = parser.parse_args()
 celltype = args.celltype
 lib_path = args.lib_path
 model_path = args.model_path
-train_path = args.train_path
 data_folder = Path(args.data_folder)
 input_dir = args.input_dir
 output_dir = args.output_dir

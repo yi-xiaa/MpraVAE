@@ -141,6 +141,11 @@ def save_to_h5(data, filename):
     with h5py.File(filename, 'w') as f:
         f.create_dataset('data', data=data)
 
+def load_from_h5(filename):
+    with h5py.File(filename, 'r') as f:
+        data = f['data'][:]
+    return data
+
 def readData(celltype, data_folder):
     # train data
     seq_pos_file='train.'+celltype+'.pos.fasta'
@@ -161,6 +166,22 @@ def readData(celltype, data_folder):
     save_to_h5(x_neg_seq, data_folder / f'train.{celltype}.neg.h5')
     save_to_h5(x_test_pos_seq, data_folder / f'test.{celltype}.pos.h5')
     save_to_h5(x_test_neg_seq, data_folder / f'test.{celltype}.neg.h5')
+
+    return x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq
+
+def readEncodedData(celltype, data_folder):
+    train_pos_file = data_folder / f'train.{celltype}.pos.h5'
+    train_neg_file = data_folder / f'train.{celltype}.neg.h5'
+    test_pos_file = data_folder / f'test.{celltype}.pos.h5'
+    test_neg_file = data_folder / f'test.{celltype}.neg.h5'
+
+    x_pos_seq = load_from_h5(train_pos_file)
+    x_neg_seq = load_from_h5(train_neg_file)
+    x_test_pos_seq = load_from_h5(test_pos_file)
+    x_test_neg_seq = load_from_h5(test_neg_file)
+
+    print('Loaded train data, pos and neg: ', [x_pos_seq.shape, x_neg_seq.shape])
+    print('Loaded test data, pos and neg: ', [x_test_pos_seq.shape, x_test_neg_seq.shape])
 
     return x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq
 
@@ -585,7 +606,7 @@ def train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambd
         avg_kl_loss_history.append(avg_kl_loss)
         avg_trimer_diff_loss_history.append(avg_trimer_diff_loss)
 
-    torch.save(model.state_dict(), f'test_cvae.{celltype}.pth')
+    torch.save(model.state_dict(), f'MpraVAE.{celltype}.pth')
     
     
     fig, axs = plt.subplots(1, 4, figsize=(16, 4))
@@ -653,8 +674,8 @@ def process_sequences_for_celltype(celltype, input_dir, output_dir):
     return pos_trimer_freq, neg_trimer_freq
 
 
-def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, pos_trimer_freq, neg_trimer_freq, verbose=0):
-    model_path = os.path.join(input_dir, f'test_cvae.{celltype}.pth')
+def generate_and_save_sequences_for_celltype(celltype, model_dir, output_dir, pos_trimer_freq, neg_trimer_freq, multiplier=5, verbose=0):
+    model_path = os.path.join(model_dir, f'MpraVAE.{celltype}.pth')
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
@@ -666,23 +687,26 @@ def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, po
     with torch.no_grad():
         pos_generated_samples = []
         condition_pos = torch.ones(50, 1).to(device)
-        for _ in range(math.ceil((5 * x_pos_seq.shape[0]) / 50)):
+        for _ in range(math.ceil((multiplier * x_pos_seq.shape[0]) / 50)):
             z = torch.randn(50, latent_dim).to(device)
             samples = model.decoder(z, condition_pos)
             pos_generated_samples.append(samples)
-        pos_generated_samples = torch.cat(pos_generated_samples, 0)[:5 * x_pos_seq.shape[0]]
+        pos_generated_samples = torch.cat(pos_generated_samples, 0)[:multiplier * x_pos_seq.shape[0]]
 
         neg_generated_samples = []
         condition_neg = torch.zeros(50, 1).to(device)
-        for _ in range(math.ceil((5 * x_neg_seq.shape[0]) / 50)):
+        for _ in range(math.ceil((multiplier * x_neg_seq.shape[0]) / 50)):
             z = torch.randn(50, latent_dim).to(device)
             samples = model.decoder(z, condition_neg)
             neg_generated_samples.append(samples)
-        neg_generated_samples = torch.cat(neg_generated_samples, 0)[:5 * x_neg_seq.shape[0]]
+        neg_generated_samples = torch.cat(neg_generated_samples, 0)[:multiplier * x_neg_seq.shape[0]]
 
 
     _, pos_max_indices = torch.max(pos_generated_samples, dim=1)
     _, neg_max_indices = torch.max(neg_generated_samples, dim=1)
+
+    save_to_h5(pos_max_indices, data_folder / f'mpravae_generated.{celltype}.pos.h5')
+    save_to_h5(neg_max_indices, data_folder / f'mpravae_generated.{celltype}.neg.h5')
 
     pos_generated_sequences = indices_to_sequence(pos_max_indices)
     pos_trimer_freq_generated = get_trimer_frequencies(pos_generated_sequences)
@@ -698,8 +722,6 @@ def generate_and_save_sequences_for_celltype(celltype, input_dir, output_dir, po
     
     save_to_fasta(pos_generated_sequences, f"seq.vae.{celltype}.pos.fasta", output_dir=output_dir)
     save_to_fasta(neg_generated_sequences, f"seq.vae.{celltype}.neg.fasta", output_dir=output_dir)
-    
-    
     
     trimer_keys = list(pos_trimer_freq.keys())
     data = {

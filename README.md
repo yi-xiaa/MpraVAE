@@ -48,32 +48,32 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 
 
 ## Usage
-- Command line to take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
+- Take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
 ```command
 Rscript /path/to/fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
 ```
 
-- Command line to convert the fasta files into hdf5 format, the output would be train.[celltype/disease].pos.h5, train.[celltype/disease].neg.h5, test.[celltype/disease].pos.h5 and test.[celltype/disease].neg.h5.
+- Convert the fasta files into hdf5 format, the output would be train.[celltype/disease].pos.h5, train.[celltype/disease].neg.h5, test.[celltype/disease].pos.h5 and test.[celltype/disease].neg.h5.
 ```command
 python /path/to/hdf5_generation.py celltype_name/disease_name --lib_path /path/to/lib.py --data_folder /path/to/Data
 ```
 
-- Command line to train MpraVAE model for synthetic data generation using train.[celltype/disease].pos.fasta and train.[celltype/disease].neg.fasta in data_folder, the output would be MpraVAE.{celltype/disease}.pth
+- Train MpraVAE model for synthetic data generation using train.[celltype/disease].pos.fasta and train.[celltype/disease].neg.fasta in data_folder, the output would be MpraVAE.{celltype/disease}.pth
 ```command
-python /path/to/MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
+python /path/to/MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
 
-- Command line to generate synthetic data using the MpraVAE model, specify the multiplier for the sample size relative to the observed data. The output will be synthetic_data.h5 containing both observed and synthetic data.
+- Generate synthetic data using the MpraVAE model, specify the multiplier for the synthetic data sample size relative to the observed data. The output will be mpravae_generated.{celltype/disease}.pos.h5 and mpravae_generated.{celltype/disease}.neg.h5 containing both observed and synthetic data.
 ```command
-python /path/to/augment.py /path/to/MpraVAE.{celltype}.pth train_data.h5 --multiplier 6
+python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --model_dir /path/to/MpraVAE_model_folder --output_dir /path/to/output_folder --multiplier 5
 ```
 
-- Command line to train CNN classifier using MpraVAE synthetic data, the output is CNN.pth
+- Train CNN classifier using MpraVAE synthetic data, the output is CNN.pth
 ```command
 python CNN_train.py synthetic_data.h5
 ```
 
-- Command line to use the CNN classifier to give prediction for the test data, the output is CNN.pth, the output is one column append as column for test_prediction.vcf
+- Use the CNN classifier to give prediction for the test data, the output is CNN.pth, the output is one column append as column for test_prediction.vcf
 ```command
 Python predict.py CNN.pth test_data.h5
 ```
