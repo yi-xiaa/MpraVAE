@@ -68,14 +68,14 @@ python /path/to/MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/
 python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --model_dir /path/to/MpraVAE_model_folder --output_dir /path/to/output_folder --multiplier 5
 ```
 
-- Train CNN classifier using MpraVAE synthetic data, the output is CNN.pth
+- Train CNN classifier using MpraVAE synthetic data, the output would be CNN.[celltype/disease].pth
 ```command
-python CNN_train.py synthetic_data.h5
+python /path/to/CNN_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
 
-- Use the CNN classifier to give prediction for the test data, the output is CNN.pth, the output is one column append as column for test_prediction.vcf
+- Use the CNN classifier to give prediction for the test data, the output is one column append as column for test_prediction.csv
 ```command
-Python predict.py CNN.pth test_data.h5
+python /path/to/predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_path "/path/to/your/testdata.fasta" --outfolder "your_output_folder/"
 ```
 
 
@@ -84,21 +84,22 @@ Python predict.py CNN.pth test_data.h5
 - The initial MPRA variants summary table should have chr, pos, log2FC, fdr information, such as [MPRA_autoimmune](https://github.com/yi-xiaa/MpraVAE/blob/main/data/MPRA_autoimmune.csv).
 ![](https://github.com/yi-xiaa/MpraVAE/blob/main/doc/pic1.png)
 
-- R command line to take the summary table as input, then output the fasta files for deep learning.
 ```command
 module load R
 cd .../MpraVAE/
 Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/ --test_size 0.2
+
+module load conda
+conda activate your_environment_name
+python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
-- Python command line to get the MpraVAE classifier, here we use Mpra autoimmune as example.
 ```command
 module load conda
 conda activate your_environment_name
 python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
 ```
 
-- Python command line for classifier to give prediction of variants in example.fasta, the prediction probability would be save as an probs_out.csv in the result folder.
 ```command
 python code/predict.py --modelname "model/VAE_autoimmune_disease.pth" --seq_input_path "data/example.fasta" --outfolder "result/"
 ```

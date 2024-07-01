@@ -46,8 +46,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print('####################################')
 print('########### Celltype:', celltype, '##########')
 print('####################################')
-dropout_rate = 0.1
-num_kernels = (128, 256)
 
 latent_dim = 64
 model = cVAE(latent_dim).to(device)

@@ -166,7 +166,7 @@ def getProbability_CNN_py(modelname, seq_input_path, outfolder=""):
     
     df = pd.DataFrame(np.exp(predsProb))
     
-    outpath = "./" + outfolder + "probs_out.csv"
+    outpath = "./" + outfolder + "test_prediction.csv"
     df.to_csv(outpath, header=None, index=False)
 
 
