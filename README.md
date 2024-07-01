@@ -87,21 +87,22 @@ python /path/to/predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_
 ```command
 module load R
 cd .../MpraVAE/
+
 Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/ --test_size 0.2
 
 module load conda
 conda activate your_environment_name
-python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
-```
 
-```command
-module load conda
-conda activate your_environment_name
-python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/ --fasta_output_dir data/
-```
+python code/hdf5_generation.py autoimmune_disease --lib_path code/lib.py --data_folder data/
 
-```command
-python code/predict.py --modelname "model/VAE_autoimmune_disease.pth" --seq_input_path "data/example.fasta" --outfolder "result/"
+python code/MpraVAE_train.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --data_folder data/ --input_dir data/ --output_dir data/
+
+python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --data_folder data/ --model_dir model/ --output_dir /path/to/output_folder --multiplier 5
+
+python code/CNN_train.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/
+
+python code/predict.py --modelname "model/CNN_autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.pos.fasta" --outfolder "result/"
+python code/predict.py --modelname "model/CNN_autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.neg.fasta" --outfolder "result/"
 ```
 
 ## Reference
