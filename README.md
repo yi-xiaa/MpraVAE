@@ -48,24 +48,34 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 
 
 ## Usage
-- Command line to take summary data (.csv file) as input and output fasta files, the output is seq.[celltype/disease].pos.fasta and seq.[celltype/disease].neg.fasta
+- Command line to take summary data (.csv file) as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta, test.[celltype/disease].neg.fasta
 ```command
 Rscript  fasta_generation.R MPRA_autoimmune.csv 
 ```
 
-- Command line to convert the fasta files into hdf5 format, the output should be data.h5
+- Command line to convert the fasta files into hdf5 format, the output should be train_data.h5 and test_data.h5
 ```command
-python hdf5_generation.py pos.fasta, neg.fasta
+python hdf5_generation.py train.[celltype/disease].pos.fasta train.[celltype/disease].neg.fasta test.[celltype/disease].pos.fasta test.[celltype/disease].neg.fasta
 ```
 
 - Command line to train MpraVAE model for synthetic data generation, the output should be MpraVAE.pth
 ```command
-python MpraVAE_train.py data.h5
+python MpraVAE_train.py train_data.h5
 ```
 
-- Command line to use MpraVAE model to generate synthetic data, the output should be synthetic_data.h5 (observed + synthetic data)
+- Command line to generate synthetic data using the MpraVAE model, specify the multiplier for the sample size relative to the observed data. The output will be synthetic_data.h5 containing both observed and synthetic data.
 ```command
-python augment.py  MpraVAE.pth data.h5
+python augment.py MpraVAE.pth train_data.h5 --multiplier 6
+```
+
+- Command line to train CNN classifier using MpraVAE synthetic data, the output is CNN.pth
+```command
+python CNN_train.py synthetic_data.h5
+```
+
+- Command line to use the CNN classifier to give prediction for the test data, the output is CNN.pth, the output is one column append as column for test_prediction.vcf
+```command
+Python predict.py CNN.pth test_data.h5
 ```
 
 
