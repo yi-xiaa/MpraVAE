@@ -7,7 +7,7 @@ import argparse
 import sys
 import torch
 import warnings
-import lib
+from lib import *
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
 parser.add_argument("celltype", type=str, help="Cell type to process")

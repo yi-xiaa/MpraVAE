@@ -50,32 +50,32 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 ## Usage
 - Take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
 ```command
-Rscript /path/to/fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
+Rscript fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
 ```
 
 - Convert the fasta files into hdf5 format, the output would be train.[celltype/disease].pos.h5, train.[celltype/disease].neg.h5, test.[celltype/disease].pos.h5 and test.[celltype/disease].neg.h5.
 ```command
-python /path/to/hdf5_generation.py celltype_name/disease_name --lib_path /path/to/lib.py --data_folder /path/to/Data
+python hdf5_generation.py celltype_name/disease_name --lib_path /path/to/lib.py --data_folder /path/to/Data
 ```
 
 - Train MpraVAE model for synthetic data generation using train.[celltype/disease].pos.fasta and train.[celltype/disease].neg.fasta in data_folder, the output would be MpraVAE.{celltype/disease}.pth
 ```command
-python /path/to/MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
+python MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
 
 - Generate synthetic data using the MpraVAE model, specify the multiplier for the synthetic data sample size relative to the observed data. The output will be mpravae_generated.{celltype/disease}.pos.h5 and mpravae_generated.{celltype/disease}.neg.h5 containing both observed and synthetic data.
 ```command
-python /path/to/augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --model_dir /path/to/MpraVAE_model_folder --output_dir /path/to/output_folder --multiplier 5
+python augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --model_dir /path/to/MpraVAE_model_folder --output_dir /path/to/output_folder --multiplier 5
 ```
 
 - Train CNN classifier using MpraVAE synthetic data, the output would be CNN.[celltype/disease].pth
 ```command
-python /path/to/CNN_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
+python CNN_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
 
 - Use the CNN classifier to give prediction for the test data, the output is one column append as column for test_prediction.csv
 ```command
-python /path/to/predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_path "/path/to/your/testdata.fasta" --outfolder "your_output_folder/"
+python predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_path "/path/to/your/testdata.fasta" --outfolder "your_output_folder/"
 ```
 
 

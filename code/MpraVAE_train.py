@@ -29,8 +29,6 @@ with open(lib_path) as f:
     exec(f.read())
 with open(model_path) as f:
     exec(f.read())
-with open(train_path) as f:
-    exec(f.read())
 
 torch.cuda.is_available()
 torch.cuda.device_count()
