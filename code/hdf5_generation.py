@@ -7,19 +7,16 @@ import argparse
 import sys
 import torch
 import warnings
+import lib
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
 parser.add_argument("celltype", type=str, help="Cell type to process")
-parser.add_argument("--lib_path", type=str, required=True, help="Path to lib.py")
 parser.add_argument("--data_folder", type=str, required=True, help="Path to Data folder")
 args = parser.parse_args()
 
 celltype = args.celltype
-lib_path = args.lib_path
 data_folder = Path(args.data_folder)
 
-with open(lib_path) as f:
-    exec(f.read())
 
 torch.cuda.is_available()
 torch.cuda.device_count()
