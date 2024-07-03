@@ -50,13 +50,22 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 ## Usage
 - Take summary data input.csv as input and output fasta files, the output files are pos.fasta, neg.fasta.
 ```command
-Rscript fasta_generation.R  —-input_file data/train.csv --output_dir data/train_data
-Rscript fasta_generation.R  —-input_file data/test.csv —output_dir data/test_data
+Rscript fasta_generation.R  --input_file data/train.csv --output_dir data/train_data
+Rscript fasta_generation.R  --input_file data/test.csv --output_dir data/test_data
 ```
 
+- Convert the fasta files into hdf5 format, the output would be seq.h5.
+```command
+python hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
+python hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
+```
 
+- Train MpraVAE model for synthetic data generation using seq.h5 in train_data, the output would be MpraVAE.pth
+```command
+python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_file model/MpraVAE.pth
 
-
+python MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
+```
 
 
 
@@ -111,7 +120,8 @@ Rscript code/fasta_generation.R --input_file data/MPRA_autoimmune_test.csv --out
 module load conda
 conda activate your_environment_name
 
-
+python code/hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
+python code/hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
 
 
 

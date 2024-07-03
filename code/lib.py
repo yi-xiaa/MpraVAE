@@ -146,28 +146,19 @@ def load_from_h5(filename):
         data = f['data'][:]
     return data
 
-def readData(celltype, data_folder):
+def readData(input_dir, output_dir):
     # train data
-    seq_pos_file='train.'+celltype+'.pos.fasta'
-    x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='train.'+celltype+'.neg.fasta'
-    x_neg_seq=onehot(data_folder/seq_neg_file)
+    seq_pos_file='pos.fasta'
+    x_pos_seq=onehot(input_dir/seq_pos_file)
+    seq_neg_file='neg.fasta'
+    x_neg_seq=onehot(input_dir/seq_neg_file)
 
-    # test data
-    test_pos_file='test.'+celltype+'.pos.fasta'
-    x_test_pos_seq=onehot(data_folder/seq_pos_file)
-    test_neg_file='test.'+celltype+'.neg.fasta'
-    x_test_neg_seq=onehot(data_folder/seq_neg_file)
+    print('pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
 
-    print('train data, pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
-    print('test data, pos and neg: ',[x_test_pos_seq.shape,x_test_neg_seq.shape])
+    save_to_h5(x_pos_seq, output_dir / f'pos.h5')
+    save_to_h5(x_neg_seq, output_dir / f'neg.h5')
 
-    save_to_h5(x_pos_seq, data_folder / f'train.{celltype}.pos.h5')
-    save_to_h5(x_neg_seq, data_folder / f'train.{celltype}.neg.h5')
-    save_to_h5(x_test_pos_seq, data_folder / f'test.{celltype}.pos.h5')
-    save_to_h5(x_test_neg_seq, data_folder / f'test.{celltype}.neg.h5')
-
-    return x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq
+    return x_pos_seq, x_neg_seq
 
 def readEncodedData(celltype, data_folder):
     train_pos_file = data_folder / f'train.{celltype}.pos.h5'

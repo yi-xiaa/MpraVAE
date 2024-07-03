@@ -10,13 +10,12 @@ import warnings
 from lib import *
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
-parser.add_argument("celltype", type=str, help="Cell type to process")
-parser.add_argument("--data_folder", type=str, required=True, help="Path to Data folder")
+parser.add_argument("--input_dir", type=str, required=True, help="Path to input directory")
+parser.add_argument("--output_dir", type=str, required=True, help="Path to output directory")
 args = parser.parse_args()
 
-celltype = args.celltype
-data_folder = Path(args.data_folder)
-
+input_dir = Path(args.input_dir)
+output_dir = Path(args.output_dir)
 
 torch.cuda.is_available()
 torch.cuda.device_count()
@@ -29,11 +28,7 @@ warnings.filterwarnings("ignore")
 random_state=1234
 seed=1234
 
-print('####################################')
-print('########### Celltype:', celltype, '##########')
-print('####################################')
-
-x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq= readData(celltype, data_folder)
+x_pos_seq, x_neg_seq = readData(input_dir, output_dir)
 
 
 
