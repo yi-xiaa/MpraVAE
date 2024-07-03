@@ -48,6 +48,20 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 
 
 ## Usage
+- Take summary data input.csv as input and output fasta files, the output files are pos.fasta, neg.fasta.
+```command
+Rscript fasta_generation.R  —-input_file data/train.csv --output_dir data/train_data
+Rscript fasta_generation.R  —-input_file data/test.csv —output_dir data/test_data
+```
+
+
+
+
+
+
+
+
+
 - Take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
 ```command
 Rscript fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
@@ -90,7 +104,23 @@ git clone https://github.com/yi-xiaa/MpraVAE
 module load R
 cd .../MpraVAE/
 
-Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/ --test_size 0.2
+
+Rscript code/fasta_generation.R --input_file data/MPRA_autoimmune_train.csv --output_dir data/train_data
+Rscript code/fasta_generation.R --input_file data/MPRA_autoimmune_test.csv --output_dir data/test_data
+
+module load conda
+conda activate your_environment_name
+
+
+
+
+
+
+
+
+
+
+Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
 
 module load conda
 conda activate your_environment_name
