@@ -84,7 +84,7 @@ vae_x_neg_downsample = onehot_to_seq(x_neg_seq_downsample)
 save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.pos.fasta", input_dir)
 save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.neg.fasta", input_dir)
                     
-avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_VAEmodel(input_dir, model_file, lambda1=1e7, lambda2=0.5, num_epochs=4, batch_size=1024, latent_dim=64, lr=2e-4)
+avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_VAEmodel(input_dir, model_file, lambda1=1e7, lambda2=0.5, num_epochs=600, batch_size=1024, latent_dim=64, lr=2e-4)
                         
 
 

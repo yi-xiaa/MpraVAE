@@ -140,7 +140,7 @@ python code/predict.py --model_file model/CNN.pth --input_file data/test_data/se
 ## Reference
 If you use `MpraVAE`, please cite:
 
-    (awaiting for formal link)
+    [Jin, Weijia & Xia, Yi & Sai, Sai & Liu, Yunlong & Chen, Li. (2024). In silico generation and augmentation of regulatory variants from massively parallel reporter assay using conditional variational autoencoder. bioRxiv.](https://doi.org/10.1101/2024.06.25.600715)
 
 
 [lichen-lab](https://github.com/lichen-lab "https://github.com/lichen-lab")
