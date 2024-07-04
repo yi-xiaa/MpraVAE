@@ -52,6 +52,10 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 ```command
 Rscript fasta_generation.R  --input_file data/train.csv --output_dir data/train_data
 Rscript fasta_generation.R  --input_file data/test.csv --output_dir data/test_data
+
+Arguments:
+  -i, --input_file            Path to the input file
+  -o, --output_dir            Output directory
 ```
 
 - Convert the fasta files into hdf5 format, the output would be sequences.h5.
