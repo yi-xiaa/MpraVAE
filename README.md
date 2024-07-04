@@ -62,47 +62,49 @@ Arguments:
 ```command
 python hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
 python hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
+
+Arguments:
+  --input_dir            Path to input directory
+  --output_dir           Path to output directory
 ```
 
 - Train MpraVAE model for synthetic data generation using sequences.h5 in train_data folder, the output would be MpraVAE.pth in model folder
 ```command
-python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_dir model/
+python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_file model/MpraVAE.pth
 
-python MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
+Arguments:
+  --input_file           Path to input data file
+  --model_file           Path to MpraVAE model file
 ```
 
-
-
-
-
-- Take summary data input.csv as input and output fasta files, the output files are train.[celltype/disease].pos.fasta, train.[celltype/disease].neg.fasta, test.[celltype/disease].pos.fasta and test.[celltype/disease].neg.fasta
+- Generate synthetic data using the MpraVAE model, specify the multiplier for the synthetic data sample size relative to the observed data. The output will be mpravae_generated_sequences.h5.
 ```command
-Rscript fasta_generation.R  --data /data/input.csv --output /path/to/output_folder --test_size 0.2
+python augment.py --model_file model/MpraVAE.pth --multiplier 5  --input_file  data/train_data/sequences.h5 --output_file data/train_data/mpravae_synthetic_sequences.h5
+
+Arguments:
+  --model_file           Path to MpraVAE model file
+  --multiplier           Multiplier for generating sequences (default: 5)
+  --input_file           Path to input file
+  --output_file          Path to output file
 ```
 
-- Convert the fasta files into hdf5 format, the output would be train.[celltype/disease].pos.h5, train.[celltype/disease].neg.h5, test.[celltype/disease].pos.h5 and test.[celltype/disease].neg.h5.
+- Train CNN classifier using both observed and MpraVAE synthetic data, the output would be CNN.pth
 ```command
-python hdf5_generation.py celltype_name/disease_name --lib_path /path/to/lib.py --data_folder /path/to/Data
+python CNN_train.py  --input_files  data/train_data/sequences.h5,data/train_data/mpravae_synthetic_sequences.h5 --model_file model/CNN.pth
+
+Arguments:
+  --input_files          Comma-separated paths to the input files(1 observed, 1 synthetic)
+  --model_file           Path to CNN model file
 ```
 
-- Train MpraVAE model for synthetic data generation using train.[celltype/disease].pos.fasta and train.[celltype/disease].neg.fasta in data_folder, the output would be MpraVAE.{celltype/disease}.pth
+- Use the CNN classifier to give prediction for the test data, and append the output as a column in prediction.csv.
 ```command
-python MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
-```
+python predict.py --model_file model/CNN.pth --input_file data/test_data/sequences.h5  --output_file prediction/prediction.csv
 
-- Generate synthetic data using the MpraVAE model, specify the multiplier for the synthetic data sample size relative to the observed data. The output will be mpravae_generated.{celltype/disease}.pos.h5 and mpravae_generated.{celltype/disease}.neg.h5 containing both observed and synthetic data.
-```command
-python augment.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --model_dir /path/to/MpraVAE_model_folder --output_dir /path/to/output_folder --multiplier 5
-```
-
-- Train CNN classifier using MpraVAE synthetic data, the output would be CNN.[celltype/disease].pth
-```command
-python CNN_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --train_path /path/to/train.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
-```
-
-- Use the CNN classifier to give prediction for the test data, the output is one column append as column for test_prediction.csv
-```command
-python predict.py --modelname "path/to/your_CNN_model.pth" --seq_input_path "/path/to/your/testdata.fasta" --outfolder "your_output_folder/"
+Arguments:
+  --model_file           Path to CNN model
+  --input_file           Path to the input h5 file
+  --model_file           Path to output file
 ```
 
 
