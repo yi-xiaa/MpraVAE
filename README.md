@@ -50,8 +50,8 @@ Rscript -e 'BiocManager::install(c("metap", "BSgenome.Hsapiens.UCSC.hg38", "BSge
 ## Usage
 - Take summary data input.csv as input and output fasta files, the output files are pos.fasta, neg.fasta.
 ```command
-Rscript fasta_generation.R  --input_file data/train.csv --output_dir data/train_data
-Rscript fasta_generation.R  --input_file data/test.csv --output_dir data/test_data
+Rscript fasta_generation.R  --input_file train.csv --output_dir train_data
+Rscript fasta_generation.R  --input_file test.csv --output_dir test_data
 
 Arguments:
   -i, --input_file            Path to the input file
@@ -60,8 +60,8 @@ Arguments:
 
 - Convert the fasta files into hdf5 format, the output would be sequences.h5.
 ```command
-python hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
-python hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
+python hdf5_generation.py  --input_dir train_data  --output_dir train_data
+python hdf5_generation.py  --input_dir test_data   --output_dir test_data
 
 Arguments:
   --input_dir            Path to input directory
@@ -70,7 +70,7 @@ Arguments:
 
 - Train MpraVAE model for synthetic data generation using sequences.h5 in train_data folder, the output would be MpraVAE.pth in model folder
 ```command
-python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_file model/MpraVAE.pth
+python MpraVAE_train.py  --input_file train.h5  --model_file MpraVAE.pth
 
 Arguments:
   --input_file           Path to input data file
@@ -79,7 +79,7 @@ Arguments:
 
 - Generate synthetic data using the MpraVAE model, specify the multiplier for the synthetic data sample size relative to the observed data. The output will be mpravae_generated_sequences.h5.
 ```command
-python augment.py --model_file model/MpraVAE.pth --multiplier 5  --input_file  data/train_data/sequences.h5 --output_file data/train_data/mpravae_synthetic_sequences.h5
+python augment.py --model_file MpraVAE.pth --multiplier 5  --input_file  train.h5 --output_file mpravae_synthetic_sequences.h5
 
 Arguments:
   --model_file           Path to MpraVAE model file
@@ -90,7 +90,7 @@ Arguments:
 
 - Train CNN classifier using both observed and MpraVAE synthetic data, the output would be CNN.pth
 ```command
-python CNN_train.py  --input_files  data/train_data/sequences.h5,data/train_data/mpravae_synthetic_sequences.h5 --model_file model/CNN.pth
+python CNN_train.py  --input_files  train.h5,mpravae_synthetic_sequences.h5 --model_file CNN.pth
 
 Arguments:
   --input_files          Comma-separated paths to the input files(1 observed, 1 synthetic)
@@ -99,12 +99,12 @@ Arguments:
 
 - Use the CNN classifier to give prediction for the test data, and append the output as a column in prediction.csv.
 ```command
-python predict.py --model_file model/CNN.pth --input_file data/test_data/sequences.h5  --output_file prediction/prediction.csv
+python predict.py --model_file CNN.pth --input_file test.h5  --output_file prediction.csv
 
 Arguments:
   --model_file           Path to CNN model
   --input_file           Path to the input h5 file
-  --model_file           Path to output file
+  --output_file          Path to output file
 ```
 
 
