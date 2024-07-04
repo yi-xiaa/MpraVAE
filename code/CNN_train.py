@@ -7,31 +7,22 @@ import argparse
 import sys
 import torch
 import warnings
+from lib import *
+from model import *
+from train import *
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
-parser.add_argument("celltype", type=str, help="Cell type to process")
-parser.add_argument("--lib_path", type=str, required=True, help="Path to lib.py")
-parser.add_argument("--model_path", type=str, required=True, help="Path to model.py")
-parser.add_argument("--train_path", type=str, required=True, help="Path to train.py")
-parser.add_argument("--data_folder", type=str, required=True, help="Path to Data folder")
-parser.add_argument("--input_dir", type=str, required=True, help="Path to input data folder")
-parser.add_argument("--output_dir", type=str, required=True, help="Path to output folder")
+parser.add_argument('--input_files', type=str, required=True, help='Comma-separated paths to the input files')
+parser.add_argument("--model_file", type=str, required=True, help="Path to CNN model file")
 args = parser.parse_args()
 
-celltype = args.celltype
-lib_path = args.lib_path
-model_path = args.model_path
-train_path = args.train_path
-data_folder = Path(args.data_folder)
-input_dir = args.input_dir
-output_dir = args.output_dir
+input_files = args.input_files.split(',')
+for input_file in input_files:
+    input_file = Path(input_file)
+    input_dir = input_file.parent
+    
+model_file = Path(args.model_file)
 
-with open(lib_path) as f:
-    exec(f.read())
-with open(model_path) as f:
-    exec(f.read())
-with open(train_path) as f:
-    exec(f.read())
 
 torch.cuda.is_available()
 torch.cuda.device_count()
@@ -56,14 +47,13 @@ model = cVAE(latent_dim).to(device)
 lr = 2e-4
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-print('####################################')
-print('########### Celltype:', celltype, '##########')
-print('####################################')
 dropout_rate = 0.1
 num_kernels = (128, 256)
 
-x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq = readEncodedData(celltype, data_folder)
-    
+input_file = os.path.join(input_dir, 'sequences.h5')
+x_pos_seq, x_neg_seq = read_h5_file(input_file)
+
+
 x_pos_seq_trainval, x_neg_seq_trainval, testData, testData_indices, x_test_noswap, y_test=split_testdata(
     x_pos_seq, x_neg_seq, test_size=0, seed=seed, verbose=1)
 
@@ -76,11 +66,9 @@ y_downsampletrue = np.concatenate((y_pos_downsample_vae, y_neg_downsample_vae), 
 x_seq_downsampletrue = np.concatenate((np.swapaxes(x_pos_seq_downsample, 2, 1), np.swapaxes(x_neg_seq_downsample, 2, 1)), axis=0)
 
 
-seq_pos_file_vae = data_folder / f'mpravae_generated.{celltype}.pos.h5'
-seq_neg_file_vae = data_folder / f'mpravae_generated.{celltype}.neg.h5'
+input_file = os.path.join(input_dir, 'mpravae_synthetic_sequences.h5')
+x_pos_seq_vae, x_neg_seq_vae = read_h5_file(input_file)
 
-x_pos_seq_vae = load_from_h5(seq_pos_file_vae)
-x_neg_seq_vae = load_from_h5(seq_neg_file_vae)
 
 y_pos_vae=np.ones(x_pos_seq_vae.shape[0])
 y_neg_vae=np.zeros(x_neg_seq_vae.shape[0])
@@ -90,9 +78,7 @@ x_seq_vae=np.swapaxes(x_seq_vae,2,1)
 x_seq_vae,y_vae=shuffleXY(x_seq_vae,y_vae)
 
 trainData_vae, valData_vae = genTrainData_vae(y_downsampletrue, x_seq_downsampletrue, y_vae, x_seq_vae, seed)
-                
 
-model_savename = 'CNN_' + celltype + '.pth'
-model_vae = trainModel(trainData_vae, valData_vae, model_savename, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, num_kernels=num_kernels, dropout_rate=dropout_rate)
+model_vae = trainModel(trainData_vae, valData_vae, model_file, BATCH_SIZE, INIT_LR, early_stop_thresh, EPOCHS, num_kernels=num_kernels, dropout_rate=dropout_rate)
 
 

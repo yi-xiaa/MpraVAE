@@ -54,15 +54,15 @@ Rscript fasta_generation.R  --input_file data/train.csv --output_dir data/train_
 Rscript fasta_generation.R  --input_file data/test.csv --output_dir data/test_data
 ```
 
-- Convert the fasta files into hdf5 format, the output would be seq.h5.
+- Convert the fasta files into hdf5 format, the output would be sequences.h5.
 ```command
 python hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
 python hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
 ```
 
-- Train MpraVAE model for synthetic data generation using seq.h5 in train_data, the output would be MpraVAE.pth
+- Train MpraVAE model for synthetic data generation using sequences.h5 in train_data folder, the output would be MpraVAE.pth in model folder
 ```command
-python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_file model/MpraVAE.pth
+python MpraVAE_train.py  --input_file data/train_data/train.h5  --model_dir model/
 
 python MpraVAE_train.py celltype_name/disease_name --lib_path /path/to/lib.py --model_path /path/to/model.py --data_folder /path/to/Data --input_dir /path/to/input_data_folder --output_dir /path/to/output_folder
 ```
@@ -113,7 +113,6 @@ git clone https://github.com/yi-xiaa/MpraVAE
 module load R
 cd .../MpraVAE/
 
-
 Rscript code/fasta_generation.R --input_file data/MPRA_autoimmune_train.csv --output_dir data/train_data
 Rscript code/fasta_generation.R --input_file data/MPRA_autoimmune_test.csv --output_dir data/test_data
 
@@ -123,28 +122,13 @@ conda activate your_environment_name
 python code/hdf5_generation.py  --input_dir data/train_data  --output_dir data/train_data
 python code/hdf5_generation.py  --input_dir data/test_data   --output_dir data/test_data
 
+python code/MpraVAE_train.py  --input_file data/train_data/sequences.h5  --model_file model/MpraVAE.pth
 
+python code/augment.py --model_file model/MpraVAE.pth --multiplier 5  --input_file  data/train_data/sequences.h5 --output_file data/train_data/mpravae_synthetic_sequences.h5
 
+python code/CNN_train.py  --input_files  data/train_data/sequences.h5,data/train_data/mpravae_synthetic_sequences.h5 --model_file model/CNN.pth
 
-
-
-
-
-Rscript code/fasta_generation.R --data data/MPRA_autoimmune.csv --output data/
-
-module load conda
-conda activate your_environment_name
-
-python code/hdf5_generation.py autoimmune_disease --lib_path code/lib.py --data_folder data/
-
-python code/MpraVAE_train.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --data_folder data/ --input_dir data/ --output_dir data/
-
-python code/augment.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --data_folder data/ --model_dir model/ --output_dir /path/to/output_folder --multiplier 5
-
-python code/CNN_train.py autoimmune_disease --lib_path code/lib.py --model_path code/model.py --train_path code/train.py --data_folder data/ --input_dir data/ --output_dir data/
-
-python code/predict.py --modelname "model/CNN.autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.pos.fasta" --outfolder "result/"
-python code/predict.py --modelname "model/CNN.autoimmune_disease.pth" --seq_input_path "data/test.autoimmune_disease.neg.fasta" --outfolder "result/"
+python code/predict.py --model_file model/CNN.pth --input_file data/test_data/sequences.h5  --output_file prediction/prediction.csv
 ```
 
 ## Reference

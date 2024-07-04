@@ -7,28 +7,38 @@ import argparse
 import sys
 import torch
 import warnings
+from lib import *
+from model import *
+
+
+class cVAE(nn.Module):
+    def __init__(self, latent_dim):
+        super(cVAE, self).__init__()
+        self.encoder = Encoder(latent_dim)
+        self.decoder = Decoder(latent_dim)
+    
+    def reparameterize(self, mu, log_var):
+        std = torch.exp(0.5 * log_var)
+        eps = torch.randn_like(std)
+        return mu + eps * std
+    
+    def forward(self, x, condition):
+        mu, log_var = self.encoder(x, condition)
+        z = self.reparameterize(mu, log_var)
+        recon_x = self.decoder(z, condition)
+        return recon_x, mu, log_var
+
+
 
 
 parser = argparse.ArgumentParser(description="Run analysis for a given cell type")
-parser.add_argument("celltype", type=str, help="Cell type to process")
-parser.add_argument("--lib_path", type=str, required=True, help="Path to lib.py")
-parser.add_argument("--model_path", type=str, required=True, help="Path to model.py")
-parser.add_argument("--data_folder", type=str, required=True, help="Path to Data folder")
-parser.add_argument("--input_dir", type=str, required=True, help="Path to input data folder")
-parser.add_argument("--output_dir", type=str, required=True, help="Path to output folder")
+parser.add_argument("--input_file", type=str, required=True, help="Path to input data file")
+parser.add_argument("--model_file", type=str, required=True, help="Path to MpraVAE model file")
 args = parser.parse_args()
 
-celltype = args.celltype
-lib_path = args.lib_path
-model_path = args.model_path
-data_folder = Path(args.data_folder)
-input_dir = args.input_dir
-output_dir = args.output_dir
-
-with open(lib_path) as f:
-    exec(f.read())
-with open(model_path) as f:
-    exec(f.read())
+input_file = Path(args.input_file)
+input_dir = input_file.parent
+model_file = args.model_file
 
 torch.cuda.is_available()
 torch.cuda.device_count()
@@ -50,16 +60,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 latent_dim = 64
 model = cVAE(latent_dim).to(device)
+#print(model)
 
 lr = 2e-4
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-print('####################################')
-print('########### Celltype:', celltype, '##########')
-print('####################################')
+x_pos_seq, x_neg_seq = read_h5_file(input_file)
 
-x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq = readEncodedData(celltype, data_folder)
-    
 x_pos_seq_trainval, x_neg_seq_trainval, testData, testData_indices, x_test_noswap, y_test=split_testdata(
     x_pos_seq, x_neg_seq, test_size=0, seed=seed, verbose=1)
 
@@ -74,10 +81,10 @@ x_seq_downsampletrue = np.concatenate((np.swapaxes(x_pos_seq_downsample, 2, 1), 
 vae_x_pos_downsample = onehot_to_seq(x_pos_seq_downsample)
 vae_x_neg_downsample = onehot_to_seq(x_neg_seq_downsample)
 
-save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.{celltype}.pos.fasta", output_dir=input_dir)
-save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.{celltype}.neg.fasta", output_dir=input_dir)
+save_to_fastafile(vae_x_pos_downsample, f"seq.vaedownsampletrue.pos.fasta", input_dir)
+save_to_fastafile(vae_x_neg_downsample, f"seq.vaedownsampletrue.neg.fasta", input_dir)
                     
-avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=600, batch_size=1024, latent_dim=64, lr=2e-4)
+avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss = train_VAEmodel(input_dir, model_file, lambda1=1e7, lambda2=0.5, num_epochs=4, batch_size=1024, latent_dim=64, lr=2e-4)
                         
 
 

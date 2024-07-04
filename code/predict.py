@@ -13,6 +13,9 @@ import math
 import os
 import warnings
 import argparse
+from pathlib import Path
+from lib import *
+
 
 import time
 import sys
@@ -143,6 +146,7 @@ def testModel(model,model_savename,testData_seq,BATCH_SIZE=64,verbose=0,predicto
             preds.extend(pred.argmax(axis=1).cpu().numpy())
             predsProb.extend(pred[:,1].cpu().numpy())
 
+
     preds=np.array(preds)
     predsProb=np.array(predsProb)
     ys=np.array(ys)
@@ -156,31 +160,28 @@ def resume(model, filename):
     model.load_state_dict(torch.load(filename,map_location=torch.device('cpu')))
 
     
-def getProbability_CNN_py(modelname, seq_input_path, outfolder=""):
-    seq_input = onehot(seq_input_path)
-    seq_input_inv = seq_input.transpose((0, 2, 1))
+def getProbability_CNN_py(model_file, input_file, output_file):
+    x_pos_seq, x_neg_seq = read_h5_file(input_file)
+    
+    all_seq = np.concatenate((x_pos_seq, x_neg_seq), axis=0)
+    
+    seq_input_inv = all_seq.transpose((0, 2, 1))
     
     model = CNN_single1()
     
-    predsProb = testModel(model, modelname, seq_input_inv, BATCH_SIZE=64, verbose=0, predictonly=1)
+    predsProb = testModel(model, model_file, seq_input_inv, BATCH_SIZE=64, verbose=0, predictonly=1)
     
     df = pd.DataFrame(np.exp(predsProb))
     
-    outpath = "./" + outfolder + "test_prediction.csv"
-    df.to_csv(outpath, header=None, index=False)
+    df.to_csv(Path(output_file), header=None, index=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the CNN prediction model.")
-    parser.add_argument("--modelname", type=str, required=True, help="Name of the model to use for prediction.")
-    parser.add_argument("--seq_input_path", type=str, required=True, help="Path to the input fasta file.")
-    parser.add_argument("--outfolder", type=str, required=True, help="Output folder for the results.")
+    parser.add_argument("--model_file", type=str, required=True, help="Path to CNN model")
+    parser.add_argument("--input_file", type=str, required=True, help="Path to the input h5 file.")
+    parser.add_argument("--output_file", type=str, required=True, help="Path to output file")
 
     args = parser.parse_args()
 
-    getProbability_CNN_py(args.modelname, args.seq_input_path, args.outfolder)
-
-
-
-
-
+    getProbability_CNN_py(args.model_file, args.input_file, args.output_file)

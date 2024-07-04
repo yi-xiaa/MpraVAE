@@ -2,7 +2,9 @@
 # coding: utf-8
 
 # In[1]:
-
+from model import *
+from torch.optim import Adam
+from torch.utils.data import DataLoader
 
 def checkpoint(model, filename):
     torch.save(model.state_dict(), filename)

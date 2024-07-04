@@ -19,6 +19,7 @@ import torch.nn.functional as F
 import warnings
 import os
 import math
+from pathlib import Path
 
 # In[2]:
 
@@ -63,6 +64,8 @@ from torch import nn
 
 import matplotlib
 
+from model import *
+
 
 
 # In[3]:
@@ -105,6 +108,29 @@ def onehot_to_seq(onehot_encoded):
         sequences.append(nucleotide_seq)
     return sequences
 
+def sequences_to_onehot(sequences):
+    x = []
+    for sequence in sequences:
+        seq_array = np.array(list(sequence))
+
+        if len(seq_array) != 1001:
+            print(f"Warning: Sequence length {len(seq_array)} is not 1001")
+            continue
+
+        label_encoder = LabelEncoder()
+        integer_encoded_seq = label_encoder.fit_transform(seq_array)
+
+        onehot_encoder = OneHotEncoder(sparse=False)
+        integer_encoded_seq = integer_encoded_seq.reshape(len(integer_encoded_seq), 1)
+        onehot_encoded_seq = onehot_encoder.fit_transform(integer_encoded_seq)
+
+        if onehot_encoded_seq.shape != (1001, 4):
+            print(f"Unexpected shape: {onehot_encoded_seq.shape}")
+            continue
+        x.append(onehot_encoded_seq)
+    x = np.array(x)
+    return x
+
 def save_to_fastafile(sequences, filename, output_dir):
     """
     Save a list of DNA sequences to a FASTA file.
@@ -113,6 +139,7 @@ def save_to_fastafile(sequences, filename, output_dir):
     filepath = os.path.join(output_dir, filename)
     with open(filepath, "w") as output_handle:
         SeqIO.write(seq_records, output_handle, "fasta")
+        
 
 
 # In[ ]:
@@ -137,15 +164,6 @@ def extract_features(sequence, k=3):
 
 # In[4]:
 
-def save_to_h5(data, filename):
-    with h5py.File(filename, 'w') as f:
-        f.create_dataset('data', data=data)
-
-def load_from_h5(filename):
-    with h5py.File(filename, 'r') as f:
-        data = f['data'][:]
-    return data
-
 def readData(input_dir, output_dir):
     # train data
     seq_pos_file='pos.fasta'
@@ -154,27 +172,21 @@ def readData(input_dir, output_dir):
     x_neg_seq=onehot(input_dir/seq_neg_file)
 
     print('pos and neg: ',[x_pos_seq.shape,x_neg_seq.shape])
-
-    save_to_h5(x_pos_seq, output_dir / f'pos.h5')
-    save_to_h5(x_neg_seq, output_dir / f'neg.h5')
+    
+    with h5py.File(output_dir / 'sequences.h5', 'w') as h5file:
+        h5file.create_dataset('pos', data=x_pos_seq)
+        h5file.create_dataset('neg', data=x_neg_seq)
 
     return x_pos_seq, x_neg_seq
 
-def readEncodedData(celltype, data_folder):
-    train_pos_file = data_folder / f'train.{celltype}.pos.h5'
-    train_neg_file = data_folder / f'train.{celltype}.neg.h5'
-    test_pos_file = data_folder / f'test.{celltype}.pos.h5'
-    test_neg_file = data_folder / f'test.{celltype}.neg.h5'
-
-    x_pos_seq = load_from_h5(train_pos_file)
-    x_neg_seq = load_from_h5(train_neg_file)
-    x_test_pos_seq = load_from_h5(test_pos_file)
-    x_test_neg_seq = load_from_h5(test_neg_file)
-
-    print('Loaded train data, pos and neg: ', [x_pos_seq.shape, x_neg_seq.shape])
-    print('Loaded test data, pos and neg: ', [x_test_pos_seq.shape, x_test_neg_seq.shape])
-
-    return x_pos_seq, x_neg_seq, x_test_pos_seq, x_test_neg_seq
+def read_h5_file(file_path):
+    with h5py.File(file_path, 'r') as h5file:
+        x_pos_seq = h5file['pos'][:]
+        x_neg_seq = h5file['neg'][:]
+        
+    print('Loaded data, pos and neg: ', [x_pos_seq.shape, x_neg_seq.shape])
+    
+    return x_pos_seq, x_neg_seq
 
 
 # In[ ]:
@@ -527,30 +539,30 @@ def train_epoch(epoch, model, train_loader, optimizer, device, lambda1=1e7, lamb
     return combined_loss.item(), recon_loss.item(), kl_loss.item(), trimer_diff_loss
 
 
-def process_sequences(celltype, sequence_type, input_dir, output_dir):
-    file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{celltype}.{sequence_type}.fasta')
+def process_sequences(sequence_type, input_dir):
+    file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{sequence_type}.fasta')
     
     sequences = read_fasta(file_path)
     encoded_seqs = [one_hot_encode(seq) for seq in sequences]
 
-    np.save(os.path.join(output_dir, f'{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
+    np.save(os.path.join(input_dir, f'{sequence_type}_encoded_data.npy'), encoded_seqs)
 
     trimer_freq = get_trimer_frequencies(sequences)
 
-    with open(os.path.join(output_dir, f'{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
+    with open(os.path.join(input_dir, f'{sequence_type}_trimer_freq.pkl'), 'wb') as file:
         pickle.dump(trimer_freq, file)
 
-def train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambda2=0.5, num_epochs=1000, batch_size=1024, latent_dim=64, lr=2e-4):
+def train_VAEmodel(input_dir, model_file, lambda1=1e7, lambda2=0.5, num_epochs=1000, batch_size=1024, latent_dim=64, lr=2e-4):
 
     for seq_type in ['neg', 'pos']:
-        process_sequences(celltype, seq_type, input_dir, output_dir)
+        process_sequences(seq_type, input_dir)
         
-    pos_encoded_data = np.load(os.path.join(output_dir, f'{celltype}_pos_encoded_data.npy'), allow_pickle=True)
-    with open(os.path.join(output_dir, f'{celltype}_pos_trimer_freq.pkl'), 'rb') as file:
+    pos_encoded_data = np.load(os.path.join(input_dir, f'pos_encoded_data.npy'), allow_pickle=True)
+    with open(os.path.join(input_dir, f'pos_trimer_freq.pkl'), 'rb') as file:
         pos_trimer_freq = pickle.load(file)
     
-    neg_encoded_data = np.load(os.path.join(output_dir, f'{celltype}_neg_encoded_data.npy'), allow_pickle=True)
-    with open(os.path.join(output_dir, f'{celltype}_neg_trimer_freq.pkl'), 'rb') as file:
+    neg_encoded_data = np.load(os.path.join(input_dir, f'neg_encoded_data.npy'), allow_pickle=True)
+    with open(os.path.join(input_dir, f'neg_trimer_freq.pkl'), 'rb') as file:
         neg_trimer_freq = pickle.load(file)
 
     neg_encoded_data = neg_encoded_data.transpose(0, 2, 1)
@@ -597,34 +609,8 @@ def train_model_for_celltype(celltype, input_dir, output_dir, lambda1=1e7, lambd
         avg_kl_loss_history.append(avg_kl_loss)
         avg_trimer_diff_loss_history.append(avg_trimer_diff_loss)
 
-    torch.save(model.state_dict(), f'MpraVAE.{celltype}.pth')
-    
-    
-    fig, axs = plt.subplots(1, 4, figsize=(16, 4))
-
-    axs[0].plot(avg_combined_loss_history, label='combined_loss')
-    axs[0].set_xlabel('Epoch')
-    axs[0].set_ylabel('combined_loss')
-    axs[0].set_title('Combined Loss')
-
-    axs[1].plot(avg_recon_loss_history, label='recon_loss')
-    axs[1].set_xlabel('Epoch')
-    axs[1].set_ylabel('recon_loss')
-    axs[1].set_title('Reconstruction Loss')
-
-    axs[2].plot(avg_kl_loss_history, label='kl_loss')
-    axs[2].set_xlabel('Epoch')
-    axs[2].set_ylabel('kl_loss')
-    axs[2].set_title('KL Loss')
-
-    axs[3].plot(avg_trimer_diff_loss_history, label='trimer_diff_loss')
-    axs[3].set_xlabel('Epoch')
-    axs[3].set_ylabel('trimer_diff_loss')
-    axs[3].set_title('Trimer Diff Loss')
-
-    plt.tight_layout()
-    fig.savefig(f"{celltype}_VAE_loss_lambda1{lambda1}.png", dpi=300, bbox_inches='tight')
-    plt.show()
+    model_file = Path(model_file)
+    torch.save(model.state_dict(), model_file)
     
     return avg_combined_loss, avg_recon_loss, avg_kl_loss, avg_trimer_diff_loss
 
@@ -643,18 +629,18 @@ def save_to_fasta(sequence_list, filename, output_dir, header_prefix="seq"):
             f.write(f">{header_prefix}{idx}\n")
             f.write(seq + "\n")
 
-def process_sequences_for_celltype(celltype, input_dir, output_dir):
+def process_sequences_for_celltype(input_dir):
     def read_and_process(sequence_type):
-        file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{celltype}.{sequence_type}.fasta')
+        file_path = os.path.join(input_dir, f'seq.vaedownsampletrue.{sequence_type}.fasta')
         
         sequences = read_fasta(file_path)
         encoded_seqs = [one_hot_encode(seq) for seq in sequences]
         
-        np.save(os.path.join(output_dir, f'{celltype}_{sequence_type}_encoded_data.npy'), encoded_seqs)
+        np.save(os.path.join(input_dir, f'{sequence_type}_encoded_data.npy'), encoded_seqs)
 
         trimer_freq = get_trimer_frequencies(sequences)
         
-        with open(os.path.join(output_dir, f'{celltype}_{sequence_type}_trimer_freq.pkl'), 'wb') as file:
+        with open(os.path.join(input_dir, f'{sequence_type}_trimer_freq.pkl'), 'wb') as file:
             pickle.dump(trimer_freq, file)
         
         return trimer_freq
@@ -665,15 +651,19 @@ def process_sequences_for_celltype(celltype, input_dir, output_dir):
     return pos_trimer_freq, neg_trimer_freq
 
 
-def generate_and_save_sequences_for_celltype(celltype, model_dir, output_dir, pos_trimer_freq, neg_trimer_freq, multiplier=5, verbose=0):
-    model_path = os.path.join(model_dir, f'MpraVAE.{celltype}.pth')
+def generate_and_save_sequences_for_celltype(model_dir, input_dir, output_dir, pos_trimer_freq, neg_trimer_freq, multiplier=5, verbose=0):
+    latent_dim = 64
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = cVAE(latent_dim).to(device)
+
+    model_path = os.path.join(model_dir, f'MpraVAE.pth')
     model.load_state_dict(torch.load(model_path))
     model.eval()
 
-    seq_pos_file='seq.vaedownsampletrue.'+celltype+'.pos.fasta'
-    x_pos_seq=onehot(data_folder/seq_pos_file)
-    seq_neg_file='seq.vaedownsampletrue.'+celltype+'.neg.fasta'
-    x_neg_seq=onehot(data_folder/seq_neg_file)
+    seq_pos_file='seq.vaedownsampletrue'+'.pos.fasta'
+    x_pos_seq=onehot(input_dir/seq_pos_file)
+    seq_neg_file='seq.vaedownsampletrue'+'.neg.fasta'
+    x_neg_seq=onehot(input_dir/seq_neg_file)
     
     with torch.no_grad():
         pos_generated_samples = []
@@ -695,38 +685,29 @@ def generate_and_save_sequences_for_celltype(celltype, model_dir, output_dir, po
 
     _, pos_max_indices = torch.max(pos_generated_samples, dim=1)
     _, neg_max_indices = torch.max(neg_generated_samples, dim=1)
-
-    save_to_h5(pos_max_indices, data_folder / f'mpravae_generated.{celltype}.pos.h5')
-    save_to_h5(neg_max_indices, data_folder / f'mpravae_generated.{celltype}.neg.h5')
+    
 
     pos_generated_sequences = indices_to_sequence(pos_max_indices)
     pos_trimer_freq_generated = get_trimer_frequencies(pos_generated_sequences)
 
     neg_generated_sequences = indices_to_sequence(neg_max_indices)
     neg_trimer_freq_generated = get_trimer_frequencies(neg_generated_sequences)
-
+    
+    
+    onehot_pos_generated_sequences = sequences_to_onehot(pos_generated_sequences)
+    onehot_neg_generated_sequences = sequences_to_onehot(neg_generated_sequences)
+    
+    with h5py.File(output_dir / 'mpravae_synthetic_sequences.h5', 'w') as h5file:
+        h5file.create_dataset('pos', data=onehot_pos_generated_sequences)
+        h5file.create_dataset('neg', data=onehot_neg_generated_sequences)
 
     pos_mse = sum(abs(pos_trimer_freq_generated[key] - pos_trimer_freq[key]) for key in pos_trimer_freq) / 64
     neg_mse = sum(abs(neg_trimer_freq_generated[key] - neg_trimer_freq[key]) for key in neg_trimer_freq) / 64
     avg_mse = (pos_mse + neg_mse) / 2
-
     
-    save_to_fasta(pos_generated_sequences, f"seq.vae.{celltype}.pos.fasta", output_dir=output_dir)
-    save_to_fasta(neg_generated_sequences, f"seq.vae.{celltype}.neg.fasta", output_dir=output_dir)
-    
-    trimer_keys = list(pos_trimer_freq.keys())
-    data = {
-        "Pos Original Seq": [pos_trimer_freq[key] for key in trimer_keys],
-        "Pos Generated Seq": [pos_trimer_freq_generated.get(key, 0) for key in trimer_keys],
-        "Pos Abs Diff": [abs(pos_trimer_freq[key] - pos_trimer_freq_generated.get(key, 0)) for key in trimer_keys],
-        "Neg Original Seq": [neg_trimer_freq[key] for key in trimer_keys],
-        "Neg Generated Seq": [neg_trimer_freq_generated.get(key, 0) for key in trimer_keys],
-        "Neg Abs Diff": [abs(neg_trimer_freq[key] - neg_trimer_freq_generated.get(key, 0)) for key in trimer_keys]
-    }
-    trimer_df = pd.DataFrame(data, index=trimer_keys)
+    save_to_fasta(pos_generated_sequences, f"seq.vae.pos.fasta", output_dir=output_dir)
+    save_to_fasta(neg_generated_sequences, f"seq.vae.neg.fasta", output_dir=output_dir)
 
-    csv_filename = os.path.join(output_dir, f'{celltype}_VAE_trimer_frequencies.csv')
-    trimer_df.to_csv(csv_filename)
 
 
 # In[ ]:
